@@ -5,10 +5,11 @@ import * as info from '@midwayjs/info';
 import * as typeorm from '@midwayjs/typeorm';
 import { join } from 'path';
 import * as view from '@midwayjs/view-nunjucks';
+import * as jwt from '@midwayjs/jwt'; 
 // import { DefaultErrorFilter } from './filter/default.filter';
 // import { NotFoundFilter } from './filter/notfound.filter';
 import { ReportMiddleware } from './middleware/report.middleware';
-import { type } from 'os';
+
 
 @Configuration({
   imports: [
@@ -16,6 +17,7 @@ import { type } from 'os';
     validate,
     view,
     typeorm,
+    jwt,
     {
       component: info,
       enabledEnvironment: ['local'],
