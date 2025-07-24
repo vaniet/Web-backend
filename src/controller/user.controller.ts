@@ -4,6 +4,7 @@ import { CreateUserDTO, LoginDTO } from '../dto/index';
 import { ResponseResult } from '../common/index';
 import { JwtService } from '@midwayjs/jwt';
 import { Context } from '@midwayjs/koa';
+import { JwtMiddleware } from '../middleware/jwt.middleware';
 
 @Controller('/users')
 export class UserController {
@@ -71,7 +72,7 @@ export class UserController {
      * 获取当前登录用户信息
      * @returns 当前用户信息
      */
-    @Post('/currentuser', { description: '获取当前用户信息' })
+    @Post('/currentuser', { middleware: [JwtMiddleware], description: '获取当前用户信息' })
     @HttpCode(200)
     public async getCurrentUser() {
         try {
