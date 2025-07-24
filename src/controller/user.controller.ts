@@ -1,9 +1,9 @@
-import { Controller, Post, Body, Context, Inject, HttpCode } from '@midwayjs/core';
+import { Controller, Post, Body, Inject, HttpCode } from '@midwayjs/core';
 import { UserService } from '../service/user.service';
 import { CreateUserDTO, LoginDTO } from '../dto/index';
 import { ResponseResult } from '../common/index';
 import { JwtService } from '@midwayjs/jwt';
-//import { Headers } from '@midwayjs/core';
+import { Context } from '@midwayjs/koa';
 
 @Controller('/users')
 export class UserController {
@@ -46,7 +46,7 @@ export class UserController {
                 userId: user.userId,
                 username: user.username
             });
-
+            this.ctx.session.user = user; // 将用户信息存入会话
             // 返回登录成功信息，包含令牌和用户信息
             return ResponseResult.success(
                 {
@@ -67,5 +67,23 @@ export class UserController {
             );
         }
     }
-    
+    /**
+     * 获取当前登录用户信息
+     * @returns 当前用户信息
+     */
+    @Post('/currentuser', { description: '获取当前用户信息' })
+    @HttpCode(200)
+    public async getCurrentUser() {
+        try {
+            // 从会话中获取用户信息
+            const user = this.ctx.session.user;
+            if (!user) {
+                return ResponseResult.error('未登录或会话已过期', 401);
+            }
+            return ResponseResult.success(user, '获取当前用户信息成功');
+        } catch (error) {
+            return ResponseResult.error(error.message || '获取用户信息失败', 500);
+        }
+    }
+
 }

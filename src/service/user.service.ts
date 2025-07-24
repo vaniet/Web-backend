@@ -1,16 +1,13 @@
-import { Provide, Inject } from '@midwayjs/core';
+import { Provide} from '@midwayjs/core';
 import { InjectEntityModel } from '@midwayjs/typeorm'; // 使用正确的导入
 import type { Repository } from 'typeorm';
 import { User } from '../entity/index';
 import { CreateUserDTO, LoginDTO } from '../dto/index';
 import * as bcrypt from 'bcryptjs';
-import { Context } from '@midwayjs/koa';
 @Provide()
 export class UserService {
     @InjectEntityModel(User) // 修改为正确的装饰器
     userModel: Repository<User>; // 变量名改为 userModel 更符合新 API
-    @Inject()
-    ctx: Context; // 注入上下文，获取当前用户
     /**
      * 创建新用户
      * @param userData 用户注册信息
