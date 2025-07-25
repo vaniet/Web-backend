@@ -5,11 +5,12 @@ import * as info from '@midwayjs/info';
 import * as typeorm from '@midwayjs/typeorm';
 import { join } from 'path';
 import * as view from '@midwayjs/view-nunjucks';
-import * as jwt from '@midwayjs/jwt'; 
+import * as jwt from '@midwayjs/jwt';
 // import { DefaultErrorFilter } from './filter/default.filter';
 // import { NotFoundFilter } from './filter/notfound.filter';
 import { ReportMiddleware } from './middleware/report.middleware';
 import * as upload from '@midwayjs/upload';
+import * as cors from '@koa/cors';
 
 
 @Configuration({
@@ -31,7 +32,12 @@ export class MainConfiguration {
   @App('koa')
   app: koa.Application;
 
-  async onReady() {
+  async onReady(container, app) {
+    // 允许所有来源跨域（开发环境）
+    app.use(cors({
+      origin: 'http://localhost:5173', // 只允许前端开发端口
+      credentials: true, // 如果需要携带cookie
+    }));
     // add middleware
     this.app.useMiddleware([ReportMiddleware]);
     // add filter
