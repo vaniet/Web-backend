@@ -9,6 +9,7 @@ import * as jwt from '@midwayjs/jwt';
 // import { DefaultErrorFilter } from './filter/default.filter';
 // import { NotFoundFilter } from './filter/notfound.filter';
 import { ReportMiddleware } from './middleware/report.middleware';
+import * as upload from '@midwayjs/upload';
 
 
 @Configuration({
@@ -18,6 +19,7 @@ import { ReportMiddleware } from './middleware/report.middleware';
     view,
     typeorm,
     jwt,
+    upload,
     {
       component: info,
       enabledEnvironment: ['local'],

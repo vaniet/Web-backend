@@ -26,5 +26,10 @@ export default {
   jwt: {
     secret: 'secret-key', // 密钥（生产环境需更换为复杂密钥）
     expiresIn: '1d', // 令牌有效期（1天）
+  },
+  multipart: {
+    mode: 'file',
+    fileSize: '5mb',
+    whitelist: ['.png', '.jpg', '.jpeg', '.gif'],
   }
 } as MidwayConfig;
