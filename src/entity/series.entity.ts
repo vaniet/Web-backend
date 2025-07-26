@@ -18,6 +18,9 @@ export class Series {
     @Column({ type: 'text', nullable: true })
     description: string;
 
+    @Column({ type: 'text', nullable: true })
+    detail: string;
+
 
     @OneToMany(() => Style, style => style.series)
     styles: Style[];

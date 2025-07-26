@@ -9,5 +9,6 @@ export class CreateSeriesDTO {
     name: string;
     cover?: string;
     description?: string;
+    detail?: string;
     styles: CreateStyleDTO[];
 } 

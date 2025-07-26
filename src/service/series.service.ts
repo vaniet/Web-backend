@@ -29,6 +29,7 @@ export class SeriesService {
       styleCount: data.styles.length,
       cover: data.cover,
       description: data.description,
+      detail: data.detail,
     });
     const savedSeries = await this.seriesModel.save(newSeries);
 
@@ -90,6 +91,53 @@ export class SeriesService {
 
     // 删除系列记录
     await this.seriesModel.delete({ id: seriesId });
+    return true;
+  }
+
+  /**
+   * 删除款式并更新系列数量
+   */
+  async deleteStyleById(styleId: number): Promise<boolean> {
+    const style = await this.styleModel.findOne({
+      where: { id: styleId },
+      relations: ['series', 'stock']
+    });
+
+    if (!style) return false;
+
+    // 删除款式封面图片
+    if (style.cover) {
+      const styleCoverPath = join(process.cwd(), 'public', style.cover);
+      if (existsSync(styleCoverPath)) {
+        try { unlinkSync(styleCoverPath); } catch { }
+      }
+    }
+
+    // 删除库存记录
+    if (style.stock) {
+      await this.stockModel.delete({ styleId: style.id });
+    }
+
+    // 删除款式记录
+    await this.styleModel.delete({ id: styleId });
+
+    // 更新系列的数量
+    const remainingStyles = await this.styleModel.count({
+      where: { seriesId: style.seriesId }
+    });
+
+    // 如果系列中所有款式都被删除，则删除系列
+    if (remainingStyles === 0) {
+      await this.deleteSeriesById(style.seriesId);
+      return true;
+    }
+
+    // 否则只更新系列的数量
+    await this.seriesModel.update(
+      { id: style.seriesId },
+      { styleCount: remainingStyles }
+    );
+
     return true;
   }
 } 

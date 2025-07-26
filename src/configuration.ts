@@ -11,6 +11,7 @@ import * as jwt from '@midwayjs/jwt';
 import { ReportMiddleware } from './middleware/report.middleware';
 import * as upload from '@midwayjs/upload';
 import * as cors from '@koa/cors';
+import * as koaStatic from 'koa-static';
 
 
 @Configuration({
@@ -38,6 +39,8 @@ export class MainConfiguration {
       origin: 'http://localhost:5173', // 只允许前端开发端口
       credentials: true, // 如果需要携带cookie
     }));
+    // 配置静态资源服务
+    app.use(koaStatic(join(process.cwd(), 'public')));
     // add middleware
     this.app.useMiddleware([ReportMiddleware]);
     // add filter
