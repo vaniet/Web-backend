@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Inject, HttpCode } from '@midwayjs/core';
+import { Controller, Post, Body, Inject, HttpCode, Del, Param } from '@midwayjs/core';
 import { UserService } from '../service/user.service';
 import { CreateUserDTO, LoginDTO } from '../dto/index';
 import { ResponseResult } from '../common/index';
@@ -85,6 +85,12 @@ export class UserController {
         } catch (error) {
             return ResponseResult.error(error.message || '获取用户信息失败', 500);
         }
+    }
+
+    @Del('/delete/:id')
+    async deleteUser(@Param('id') id: number) {
+        const result = await this.userService.deleteUserById(Number(id));
+        return { success: result };
     }
 
 }

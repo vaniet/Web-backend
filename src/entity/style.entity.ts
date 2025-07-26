@@ -24,6 +24,9 @@ export class Style {
     @Column({ length: 255, nullable: true })
     cover: string;
 
+    @Column({ type: 'text', nullable: true })
+    description: string;
+
     @OneToOne(() => Stock, stock => stock.style)
     stock: Stock;
 }

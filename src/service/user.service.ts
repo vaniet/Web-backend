@@ -1,9 +1,11 @@
-import { Provide} from '@midwayjs/core';
+import { Provide } from '@midwayjs/core';
 import { InjectEntityModel } from '@midwayjs/typeorm'; // 使用正确的导入
 import type { Repository } from 'typeorm';
 import { User } from '../entity/index';
 import { CreateUserDTO, LoginDTO } from '../dto/index';
 import * as bcrypt from 'bcryptjs';
+import { join } from 'path';
+import { existsSync, unlinkSync } from 'fs';
 @Provide()
 export class UserService {
     @InjectEntityModel(User) // 修改为正确的装饰器
@@ -72,6 +74,21 @@ export class UserService {
             where: { userId }
         });
     }
-    
+    /**
+     * 根据ID删除用户及其头像文件
+     */
+    async deleteUserById(userId: number): Promise<boolean> {
+        const user = await this.userModel.findOne({ where: { userId } });
+        if (!user) return false;
+        // 删除头像文件
+        if (user.avatar) {
+            const avatarPath = join(process.cwd(), 'public', user.avatar);
+            if (existsSync(avatarPath)) {
+                try { unlinkSync(avatarPath); } catch { }
+            }
+        }
+        await this.userModel.delete({ userId });
+        return true;
+    }
 
 }
