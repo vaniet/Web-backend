@@ -1,16 +1,28 @@
 // src/entity/stock.entity.ts
-import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm';
-import { Style } from './style.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Series } from './series.entity';
 
 @Entity()
 export class Stock {
-    @PrimaryColumn() // 以款式id为主键
-    styleId: number;
+    @PrimaryGeneratedColumn()
+    id: number;
 
-    @OneToOne(() => Style, style => style.stock)
-    @JoinColumn({ name: 'styleId' })
-    style: Style;
+    @Column()
+    seriesId: number;
 
-    @Column({ type: 'int', default: 0 })
-    quantity: number;
+    @ManyToOne(() => Series, series => series.stocks)
+    @JoinColumn({ name: 'seriesId' })
+    series: Series;
+
+    @Column({ type: 'text' })
+    boxContents: string; // 存储为JSON字符串
+
+    @Column({ type: 'text', nullable: true })
+    soldItems: string; // 存储为JSON字符串
+
+    @Column({ type: 'boolean', default: false })
+    isSoldOut: boolean; // 是否售罄
+
+    @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
 }

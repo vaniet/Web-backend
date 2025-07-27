@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Style } from './index';
+import { Stock } from './stock.entity';
 
 @Entity()
 export class Series {
@@ -21,7 +22,9 @@ export class Series {
     @Column({ type: 'text', nullable: true })
     detail: string;
 
-
     @OneToMany(() => Style, style => style.series)
     styles: Style[];
+
+    @OneToMany(() => Stock, stock => stock.series)
+    stocks: Stock[];
 }

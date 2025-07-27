@@ -1,7 +1,6 @@
 // src/entity/style.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
 import { Series } from './series.entity';
-import { Stock } from './index';
 
 @Entity()
 export class Style {
@@ -26,7 +25,4 @@ export class Style {
 
     @Column({ type: 'text', nullable: true })
     description: string;
-
-    @OneToOne(() => Stock, stock => stock.style)
-    stock: Stock;
 }

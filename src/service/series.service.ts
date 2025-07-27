@@ -57,7 +57,7 @@ export class SeriesService {
   async deleteSeriesById(seriesId: number): Promise<boolean> {
     const series = await this.seriesModel.findOne({
       where: { id: seriesId },
-      relations: ['styles', 'styles.stock']
+      relations: ['styles']
     });
 
     if (!series) return false;
@@ -70,7 +70,7 @@ export class SeriesService {
       }
     }
 
-    // 删除款式图片和库存
+    // 删除款式图片
     if (series.styles && series.styles.length > 0) {
       for (const style of series.styles) {
         // 删除款式封面图片
@@ -80,14 +80,13 @@ export class SeriesService {
             try { unlinkSync(styleCoverPath); } catch { }
           }
         }
-        // 删除库存记录
-        if (style.stock) {
-          await this.stockModel.delete({ styleId: style.id });
-        }
       }
       // 删除款式记录
       await this.styleModel.delete({ seriesId });
     }
+
+    // 删除库存记录
+    await this.stockModel.delete({ seriesId });
 
     // 删除系列记录
     await this.seriesModel.delete({ id: seriesId });
@@ -100,7 +99,7 @@ export class SeriesService {
   async deleteStyleById(styleId: number): Promise<boolean> {
     const style = await this.styleModel.findOne({
       where: { id: styleId },
-      relations: ['series', 'stock']
+      relations: ['series']
     });
 
     if (!style) return false;
@@ -109,13 +108,8 @@ export class SeriesService {
     if (style.cover) {
       const styleCoverPath = join(process.cwd(), 'public', style.cover);
       if (existsSync(styleCoverPath)) {
-        try { unlinkSync(styleCoverPath); } catch { }
+        try { unlinkSync(styleCoverPath); } catch {}
       }
-    }
-
-    // 删除库存记录
-    if (style.stock) {
-      await this.stockModel.delete({ styleId: style.id });
     }
 
     // 删除款式记录
