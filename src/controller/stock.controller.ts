@@ -3,6 +3,7 @@ import { Inject } from '@midwayjs/core';
 import { StockService } from '../service/stock.service';
 import { CreateStockDTO } from '../dto/stock.dto';
 import { ResponseResult } from '../common/response.common';
+import { JwtMiddleware } from '../middleware/jwt.middleware';
 
 @Controller('/stock')
 export class StockController {
@@ -23,9 +24,9 @@ export class StockController {
   }
 
   /**
-   * 购买（从指定盒抽取）
+   * 购买（从指定盒抽取）- 需要登录验证
    */
-  @Post('/purchase/:boxId')
+  @Post('/purchase/:boxId', { middleware: [JwtMiddleware] })
   async purchaseFromBox(@Param('boxId') boxId: number) {
     const result = await this.stockService.purchaseFromBox(Number(boxId));
     if (result.success) {

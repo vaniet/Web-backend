@@ -20,7 +20,7 @@ export class User {
         type: 'varchar',
         enum: UserRole, // 关联到 UserRole 枚举
         nullable: false,
-        default: UserRole.CUSTOMER, // 默认角色为普通用户
+        // 移除默认值，让service层控制
     })
     role: UserRole; // 类型指定为 UserRole 枚举
     //手机号，必选项

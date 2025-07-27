@@ -6,6 +6,7 @@ import { CreateUserDTO, LoginDTO } from '../dto/index';
 import * as bcrypt from 'bcryptjs';
 import { join } from 'path';
 import { existsSync, unlinkSync } from 'fs';
+import { UserRole } from '../dto/index'
 @Provide()
 export class UserService {
     @InjectEntityModel(User) // 修改为正确的装饰器
@@ -16,6 +17,8 @@ export class UserService {
      * @returns 创建成功的用户信息(不含密码)
      */
     async createUser(userData: CreateUserDTO): Promise<Omit<User, 'password'>> {
+        console.log('createUser - 接收到的数据:', userData);
+
         // 检查用户名是否已存在
         const existingUser = await this.userModel.findOne({
             where: { username: userData.username }
@@ -35,9 +38,13 @@ export class UserService {
         newUser.phone = userData.phone;
         newUser.password = hashedPassword;
         newUser.avatar = userData.avatar;
+        newUser.role = userData.role || UserRole.CUSTOMER; // 添加role字段处理，默认为customer
+
+        console.log('createUser - 设置的role:', newUser.role);
 
         // 保存到数据库
         const savedUser = await this.userModel.save(newUser);
+        console.log('createUser - 保存后的用户:', savedUser);
 
         // 移除密码字段后返回
         const { password, ...userWithoutPassword } = savedUser;

@@ -76,13 +76,32 @@ export class UserController {
     @HttpCode(200)
     public async getCurrentUser() {
         try {
-            // 从会话中获取用户信息
-            const user = this.ctx.session.user;
-            if (!user) {
+            console.log('getCurrentUser - ctx.user:', this.ctx.user);
+            console.log('getCurrentUser - ctx.session:', this.ctx.session);
+
+            // 从JWT payload中获取用户信息，而不是session
+            const payload = this.ctx.user;
+            if (!payload || !payload.userId) {
+                console.log('getCurrentUser - No payload or userId');
                 return ResponseResult.error('未登录或会话已过期', 401);
             }
-            return ResponseResult.success(user, '获取当前用户信息成功');
+
+            console.log('getCurrentUser - Payload userId:', payload.userId);
+
+            // 根据userId从数据库获取最新用户信息
+            const user = await this.userService.getUserById(payload.userId);
+            if (!user) {
+                console.log('getCurrentUser - User not found in database');
+                return ResponseResult.error('用户不存在', 404);
+            }
+
+            console.log('getCurrentUser - User found:', user);
+
+            // 移除密码字段
+            const { password, ...userWithoutPassword } = user;
+            return ResponseResult.success(userWithoutPassword, '获取当前用户信息成功');
         } catch (error) {
+            console.log('getCurrentUser - Error:', error);
             return ResponseResult.error(error.message || '获取用户信息失败', 500);
         }
     }
