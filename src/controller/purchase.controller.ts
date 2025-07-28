@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Put, Del, Param, Query } from '@midwayjs/core';
 import { Inject } from '@midwayjs/core';
 import { PurchaseService } from '../service/purchase.service';
-import { CreatePurchaseDTO, UpdateShippingDTO, QueryPurchaseDTO } from '../dto/purchase.dto';
+import { CreatePurchaseDTO, UpdateShippingDTO, QueryPurchaseDTO, BatchDeleteDTO } from '../dto/purchase.dto';
 import { ResponseResult } from '../common/response.common';
 import { JwtMiddleware } from '../middleware/jwt.middleware';
 import { Context } from '@midwayjs/koa';
@@ -37,6 +37,19 @@ export class PurchaseController {
         try {
             const userId = this.ctx.user.userId;
             const result = await this.purchaseService.getUserPurchases(userId, query);
+            return ResponseResult.success(result);
+        } catch (error) {
+            return ResponseResult.error(error.message);
+        }
+    }
+
+    /**
+     * 获取所有订单ID列表（管理员功能）
+     */
+    @Get('/all', { middleware: [JwtMiddleware] })
+    async getAllPurchases(@Query() query: QueryPurchaseDTO) {
+        try {
+            const result = await this.purchaseService.getAllPurchases(query);
             return ResponseResult.success(result);
         } catch (error) {
             return ResponseResult.error(error.message);
@@ -90,13 +103,48 @@ export class PurchaseController {
     }
 
     /**
-     * 删除购买记录
+     * 取消订单（用户功能）
+     */
+    @Put('/:id/cancel', { middleware: [JwtMiddleware] })
+    async cancelPurchase(@Param('id') id: number) {
+        try {
+            const userId = this.ctx.user.userId;
+            const result = await this.purchaseService.cancelPurchase(Number(id), userId);
+            if (result) {
+                return ResponseResult.success(null, '订单取消成功');
+            }
+            return ResponseResult.error('取消失败', 500);
+        } catch (error) {
+            return ResponseResult.error(error.message);
+        }
+    }
+
+    /**
+     * 删除购买记录（只有取消状态的订单才能删除）
      */
     @Del('/:id', { middleware: [JwtMiddleware] })
     async deletePurchase(@Param('id') id: number) {
         try {
-            const result = await this.purchaseService.deletePurchase(Number(id));
-            return { success: result };
+            const userId = this.ctx.user.userId;
+            const result = await this.purchaseService.deletePurchase(Number(id), userId);
+            if (result) {
+                return ResponseResult.success(null, '购买记录删除成功');
+            }
+            return ResponseResult.error('删除失败', 500);
+        } catch (error) {
+            return ResponseResult.error(error.message);
+        }
+    }
+
+    /**
+     * 批量删除购买记录（管理员功能）
+     */
+    @Del('/batch', { middleware: [JwtMiddleware] })
+    async batchDeletePurchases(@Body() data: BatchDeleteDTO) {
+        try {
+            // 这里可以添加管理员权限验证
+            const result = await this.purchaseService.batchDeletePurchases(data.ids);
+            return ResponseResult.success(result, `批量删除完成：成功${result.success}个，失败${result.failed}个`);
         } catch (error) {
             return ResponseResult.error(error.message);
         }

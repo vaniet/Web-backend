@@ -36,10 +36,11 @@ export class PurchaseService {
     /**
      * 获取用户的购买记录
      */
-    async getUserPurchases(userId: number, query: QueryPurchaseDTO = {}): Promise<{ purchases: Purchase[]; total: number }> {
-        const { page = 1, limit = 10, shippingStatus } = query;
+    async getUserPurchases(userId: number, query: QueryPurchaseDTO = {}): Promise<{ purchaseIds: number[]; total: number }> {
+        const { shippingStatus } = query;
 
         const queryBuilder = this.purchaseModel.createQueryBuilder('purchase')
+            .select('purchase.id') // 只选择ID字段
             .where('purchase.userId = :userId', { userId })
             .orderBy('purchase.purchasedAt', 'DESC');
 
@@ -47,13 +48,41 @@ export class PurchaseService {
             queryBuilder.andWhere('purchase.shippingStatus = :shippingStatus', { shippingStatus });
         }
 
-        const total = await queryBuilder.getCount();
-        const purchases = await queryBuilder
-            .skip((page - 1) * limit)
-            .take(limit)
-            .getMany();
+        const purchases = await queryBuilder.getMany();
 
-        return { purchases, total };
+        // 提取ID列表
+        const purchaseIds = purchases.map(purchase => purchase.id);
+
+        return { purchaseIds, total: purchaseIds.length };
+    }
+
+    /**
+     * 获取所有订单信息（管理员功能）
+     */
+    async getAllPurchases(query: QueryPurchaseDTO = {}): Promise<{ purchaseIds: number[]; total: number }> {
+        const { shippingStatus, page = 1, limit = 20 } = query;
+
+        const queryBuilder = this.purchaseModel.createQueryBuilder('purchase')
+            .select('purchase.id') // 只选择ID字段
+            .orderBy('purchase.purchasedAt', 'DESC');
+
+        if (shippingStatus) {
+            queryBuilder.andWhere('purchase.shippingStatus = :shippingStatus', { shippingStatus });
+        }
+
+        // 分页处理
+        const offset = (page - 1) * limit;
+        queryBuilder.skip(offset).take(limit);
+
+        const purchases = await queryBuilder.getMany();
+        const total = await this.purchaseModel.count({
+            where: shippingStatus ? { shippingStatus } : {}
+        });
+
+        // 提取ID列表
+        const purchaseIds = purchases.map(purchase => purchase.id);
+
+        return { purchaseIds, total };
     }
 
     /**
@@ -100,6 +129,34 @@ export class PurchaseService {
     }
 
     /**
+     * 取消订单（用户功能）
+     */
+    async cancelPurchase(id: number, userId: number): Promise<boolean> {
+        const purchase = await this.purchaseModel.findOne({
+            where: { id, userId }
+        });
+
+        if (!purchase) {
+            throw new Error('购买记录不存在或无权限操作');
+        }
+
+        // 只有待发货状态的订单才能取消
+        if (purchase.shippingStatus !== ShippingStatus.PENDING) {
+            throw new Error('只有待发货状态的订单才能取消');
+        }
+
+        const result = await this.purchaseModel.update(
+            { id },
+            {
+                shippingStatus: ShippingStatus.CANCELLED,
+                updatedAt: new Date()
+            }
+        );
+
+        return result.affected > 0;
+    }
+
+    /**
      * 获取统计信息
      */
     async getPurchaseStats(userId: number) {
@@ -113,20 +170,66 @@ export class PurchaseService {
         const delivered = await this.purchaseModel.count({
             where: { userId, shippingStatus: ShippingStatus.DELIVERED }
         });
+        const cancelled = await this.purchaseModel.count({
+            where: { userId, shippingStatus: ShippingStatus.CANCELLED }
+        });
 
         return {
             total,
             pending,
             shipped,
-            delivered
+            delivered,
+            cancelled
         };
     }
 
     /**
-     * 删除购买记录
+     * 删除购买记录（只有取消状态的订单才能删除）
      */
-    async deletePurchase(id: number): Promise<boolean> {
+    async deletePurchase(id: number, userId?: number): Promise<boolean> {
+        // 查找订单
+        const purchase = await this.purchaseModel.findOne({
+            where: userId ? { id, userId } : { id }
+        });
+
+        if (!purchase) {
+            throw new Error('购买记录不存在或无权限删除');
+        }
+
+        // 只有取消状态的订单才能删除
+        if (purchase.shippingStatus !== ShippingStatus.CANCELLED) {
+            throw new Error('只有取消状态的订单才能删除');
+        }
+
         const result = await this.purchaseModel.delete({ id });
         return result.affected > 0;
+    }
+
+    /**
+     * 批量删除购买记录（管理员功能）
+     */
+    async batchDeletePurchases(ids: number[]): Promise<{ success: number; failed: number }> {
+        let success = 0;
+        let failed = 0;
+
+        for (const id of ids) {
+            try {
+                const purchase = await this.purchaseModel.findOne({ where: { id } });
+                if (purchase && purchase.shippingStatus === ShippingStatus.CANCELLED) {
+                    const result = await this.purchaseModel.delete({ id });
+                    if (result.affected > 0) {
+                        success++;
+                    } else {
+                        failed++;
+                    }
+                } else {
+                    failed++;
+                }
+            } catch (error) {
+                failed++;
+            }
+        }
+
+        return { success, failed };
     }
 } 

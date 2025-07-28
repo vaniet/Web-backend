@@ -31,4 +31,9 @@ export class QueryPurchaseDTO {
     shippingStatus?: ShippingStatus;
     page?: number;
     limit?: number;
+}
+
+// 批量删除DTO
+export class BatchDeleteDTO {
+    ids: number[];
 } 
