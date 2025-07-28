@@ -1,6 +1,7 @@
 // src/entity/style.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, OneToMany } from 'typeorm';
 import { Series } from './series.entity';
+import { Purchase } from './purchase.entity';
 
 @Entity()
 export class Style {
@@ -25,4 +26,8 @@ export class Style {
 
     @Column({ type: 'text', nullable: true })
     description: string;
+
+    // 购买记录关联
+    @OneToMany(() => Purchase, purchase => purchase.style)
+    purchases: Purchase[];
 }

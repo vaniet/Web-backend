@@ -1,5 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { UserRole } from '../dto/index'
+import { Purchase } from './purchase.entity';
+
 @Entity('user') // 对应数据库表名
 export class User {
     //自增用户id，主键
@@ -20,7 +22,7 @@ export class User {
         type: 'varchar',
         enum: UserRole, // 关联到 UserRole 枚举
         nullable: false,
-        // 移除默认值，让service层控制
+        default: UserRole.CUSTOMER, // 恢复默认值，确保数据库层面有值
     })
     role: UserRole; // 类型指定为 UserRole 枚举
     //手机号，必选项
@@ -65,4 +67,8 @@ export class User {
         comment: '账号信息最后更新时间'
     })
     updatedAt: Date;
+
+    // 购买记录关联
+    @OneToMany(() => Purchase, purchase => purchase.user)
+    purchases: Purchase[];
 }

@@ -1,10 +1,12 @@
-import { Provide } from '@midwayjs/core';
+import { Provide, Inject } from '@midwayjs/core';
 import { InjectEntityModel } from '@midwayjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Stock } from '../entity/stock.entity';
 import { Series } from '../entity/series.entity';
 import { Style } from '../entity/style.entity';
 import { CreateStockDTO, PurchaseResult } from '../dto/stock.dto';
+import { PurchaseService } from './purchase.service';
+import { CreatePurchaseDTO } from '../dto/purchase.dto';
 
 @Provide()
 export class StockService {
@@ -16,6 +18,9 @@ export class StockService {
 
   @InjectEntityModel(Style)
   styleModel: Repository<Style>;
+
+  @Inject()
+  purchaseService: PurchaseService;
 
   /**
    * 创建库存（以盒为单位）
@@ -81,7 +86,7 @@ export class StockService {
   /**
    * 购买（从指定盒中抽取款式）
    */
-  async purchaseFromBox(boxId: number): Promise<PurchaseResult> {
+  async purchaseFromBox(boxId: number, userId: number): Promise<PurchaseResult> {
     const stock = await this.stockModel.findOne({ where: { id: boxId } });
 
     if (!stock || stock.isSoldOut) {
@@ -108,6 +113,33 @@ export class StockService {
     // 更新已售出列表
     const newSoldItems = [...soldItems, randomStyleId];
     await this.stockModel.update({ id: boxId }, { soldItems: JSON.stringify(newSoldItems) });
+
+    // 新增：如果已全部售出，立即标记为售罄
+    if (newSoldItems.length >= boxContents.length) {
+      await this.stockModel.update({ id: boxId }, { isSoldOut: true });
+    }
+
+    // 获取款式和系列信息
+    const style = await this.styleModel.findOne({
+      where: { id: randomStyleId },
+      relations: ['series']
+    });
+
+    if (style) {
+      // 创建购买记录
+      const purchaseData: CreatePurchaseDTO = {
+        stockId: boxId,
+        styleId: style.id,
+        seriesId: style.seriesId,
+        seriesName: style.series.name,
+        styleName: style.name,
+        seriesCover: style.series.cover,
+        styleCover: style.cover,
+        isHidden: style.isHidden
+      };
+
+      await this.purchaseService.createPurchase(userId, purchaseData);
+    }
 
     return { styleId: randomStyleId, success: true };
   }

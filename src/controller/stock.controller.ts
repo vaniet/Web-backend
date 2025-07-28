@@ -4,11 +4,15 @@ import { StockService } from '../service/stock.service';
 import { CreateStockDTO } from '../dto/stock.dto';
 import { ResponseResult } from '../common/response.common';
 import { JwtMiddleware } from '../middleware/jwt.middleware';
+import { Context } from '@midwayjs/koa';
 
 @Controller('/stock')
 export class StockController {
   @Inject()
   stockService: StockService;
+
+  @Inject()
+  ctx: Context;
 
   /**
    * 创建库存
@@ -28,7 +32,8 @@ export class StockController {
    */
   @Post('/purchase/:boxId', { middleware: [JwtMiddleware] })
   async purchaseFromBox(@Param('boxId') boxId: number) {
-    const result = await this.stockService.purchaseFromBox(Number(boxId));
+    const userId = this.ctx.user.userId;
+    const result = await this.stockService.purchaseFromBox(Number(boxId), userId);
     if (result.success) {
       return ResponseResult.success({ styleId: result.styleId }, '购买成功');
     }
