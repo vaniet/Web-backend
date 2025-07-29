@@ -23,6 +23,13 @@ export class UpdateShippingDTO {
     deliveredAt?: Date;
 }
 
+// 批量发货DTO
+export class BatchShippingDTO {
+    ids: number[];
+    trackingNumber?: string;
+    shippedAt?: Date;
+}
+
 // 查询购买记录DTO
 export class QueryPurchaseDTO {
     userId?: number;
@@ -36,4 +43,11 @@ export class QueryPurchaseDTO {
 // 批量删除DTO
 export class BatchDeleteDTO {
     ids: number[];
+}
+
+// 设置收货信息DTO
+export class SetShippingInfoDTO {
+    receiverName: string;
+    receiverPhone: string;
+    shippingAddress: string;
 } 

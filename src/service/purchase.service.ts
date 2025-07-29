@@ -2,7 +2,7 @@ import { Provide } from '@midwayjs/core';
 import { InjectEntityModel } from '@midwayjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Purchase, ShippingStatus } from '../entity/purchase.entity';
-import { CreatePurchaseDTO, UpdateShippingDTO, QueryPurchaseDTO } from '../dto/purchase.dto';
+import { CreatePurchaseDTO, UpdateShippingDTO, QueryPurchaseDTO, BatchShippingDTO, SetShippingInfoDTO } from '../dto/purchase.dto';
 
 @Provide()
 export class PurchaseService {
@@ -129,6 +129,58 @@ export class PurchaseService {
     }
 
     /**
+     * 批量发货（管理员功能）
+     */
+    async batchShipping(data: BatchShippingDTO): Promise<{ success: number; failed: number; errors: string[] }> {
+        let success = 0;
+        let failed = 0;
+        const errors: string[] = [];
+
+        for (const id of data.ids) {
+            try {
+                const purchase = await this.purchaseModel.findOne({ where: { id } });
+
+                if (!purchase) {
+                    failed++;
+                    errors.push(`订单ID ${id}: 订单不存在`);
+                    continue;
+                }
+
+                // 只有待发货状态的订单才能发货
+                if (purchase.shippingStatus !== ShippingStatus.PENDING) {
+                    failed++;
+                    errors.push(`订单ID ${id}: 只有待发货状态的订单才能发货，当前状态为 ${purchase.shippingStatus}`);
+                    continue;
+                }
+
+                const updateData: any = {
+                    shippingStatus: ShippingStatus.SHIPPED,
+                    updatedAt: new Date(),
+                    shippedAt: data.shippedAt || new Date()
+                };
+
+                if (data.trackingNumber) {
+                    updateData.trackingNumber = data.trackingNumber;
+                }
+
+                const result = await this.purchaseModel.update({ id }, updateData);
+
+                if (result.affected > 0) {
+                    success++;
+                } else {
+                    failed++;
+                    errors.push(`订单ID ${id}: 更新失败`);
+                }
+            } catch (error) {
+                failed++;
+                errors.push(`订单ID ${id}: ${error.message}`);
+            }
+        }
+
+        return { success, failed, errors };
+    }
+
+    /**
      * 取消订单（用户功能）
      */
     async cancelPurchase(id: number, userId: number): Promise<boolean> {
@@ -231,5 +283,36 @@ export class PurchaseService {
         }
 
         return { success, failed };
+    }
+
+    /**
+     * 设置收货信息
+     */
+    async setShippingInfo(id: number, userId: number, data: SetShippingInfoDTO): Promise<boolean> {
+        // 查找订单
+        const purchase = await this.purchaseModel.findOne({
+            where: { id, userId }
+        });
+
+        if (!purchase) {
+            throw new Error('购买记录不存在或无权限操作');
+        }
+
+        // 只有待发货状态的订单才能设置收货信息
+        if (purchase.shippingStatus !== ShippingStatus.PENDING) {
+            throw new Error('只有待发货状态的订单才能设置收货信息');
+        }
+
+        const result = await this.purchaseModel.update(
+            { id },
+            {
+                receiverName: data.receiverName,
+                receiverPhone: data.receiverPhone,
+                shippingAddress: data.shippingAddress,
+                updatedAt: new Date()
+            }
+        );
+
+        return result.affected > 0;
     }
 } 

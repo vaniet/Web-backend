@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Put, Del, Param, Query } from '@midwayjs/core';
 import { Inject } from '@midwayjs/core';
 import { PurchaseService } from '../service/purchase.service';
-import { CreatePurchaseDTO, UpdateShippingDTO, QueryPurchaseDTO, BatchDeleteDTO } from '../dto/purchase.dto';
+import { CreatePurchaseDTO, UpdateShippingDTO, QueryPurchaseDTO, BatchDeleteDTO, BatchShippingDTO, SetShippingInfoDTO } from '../dto/purchase.dto';
 import { ResponseResult } from '../common/response.common';
 import { JwtMiddleware } from '../middleware/jwt.middleware';
 import { Context } from '@midwayjs/koa';
@@ -75,7 +75,7 @@ export class PurchaseController {
     /**
      * 更新物流状态（管理员功能）
      */
-    @Put('/:id/shipping', { middleware: [JwtMiddleware] })
+    @Put('/shipping/:id', { middleware: [JwtMiddleware] })
     async updateShippingStatus(@Param('id') id: number, @Body() data: UpdateShippingDTO) {
         try {
             const result = await this.purchaseService.updateShippingStatus(Number(id), data);
@@ -105,7 +105,7 @@ export class PurchaseController {
     /**
      * 取消订单（用户功能）
      */
-    @Put('/:id/cancel', { middleware: [JwtMiddleware] })
+    @Put('/cancel/:id', { middleware: [JwtMiddleware] })
     async cancelPurchase(@Param('id') id: number) {
         try {
             const userId = this.ctx.user.userId;
@@ -137,6 +137,23 @@ export class PurchaseController {
     }
 
     /**
+     * 批量发货（管理员功能）
+     */
+    @Put('/batch-shipping', { middleware: [JwtMiddleware] })
+    async batchShipping(@Body() data: BatchShippingDTO) {
+        try {
+            // 这里可以添加管理员权限验证
+            const result = await this.purchaseService.batchShipping(data);
+            return ResponseResult.success(
+                result,
+                `批量发货完成：成功${result.success}个，失败${result.failed}个`
+            );
+        } catch (error) {
+            return ResponseResult.error(error.message);
+        }
+    }
+
+    /**
      * 批量删除购买记录（管理员功能）
      */
     @Del('/batch', { middleware: [JwtMiddleware] })
@@ -145,6 +162,23 @@ export class PurchaseController {
             // 这里可以添加管理员权限验证
             const result = await this.purchaseService.batchDeletePurchases(data.ids);
             return ResponseResult.success(result, `批量删除完成：成功${result.success}个，失败${result.failed}个`);
+        } catch (error) {
+            return ResponseResult.error(error.message);
+        }
+    }
+
+    /**
+     * 设置收货信息
+     */
+    @Put('/shipping-info/:id', { middleware: [JwtMiddleware] })
+    async setShippingInfo(@Param('id') id: number, @Body() data: SetShippingInfoDTO) {
+        try {
+            const userId = this.ctx.user.userId;
+            const result = await this.purchaseService.setShippingInfo(Number(id), userId, data);
+            if (result) {
+                return ResponseResult.success(null, '收货信息设置成功');
+            }
+            return ResponseResult.error('设置失败', 500);
         } catch (error) {
             return ResponseResult.error(error.message);
         }
