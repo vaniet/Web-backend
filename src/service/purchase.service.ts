@@ -236,7 +236,7 @@ export class PurchaseService {
     }
 
     /**
-     * 删除购买记录（只有取消状态的订单才能删除）
+     * 删除购买记录
      */
     async deletePurchase(id: number, userId?: number): Promise<boolean> {
         // 查找订单
@@ -246,11 +246,6 @@ export class PurchaseService {
 
         if (!purchase) {
             throw new Error('购买记录不存在或无权限删除');
-        }
-
-        // 只有取消状态的订单才能删除
-        if (purchase.shippingStatus !== ShippingStatus.CANCELLED) {
-            throw new Error('只有取消状态的订单才能删除');
         }
 
         const result = await this.purchaseModel.delete({ id });
@@ -267,7 +262,7 @@ export class PurchaseService {
         for (const id of ids) {
             try {
                 const purchase = await this.purchaseModel.findOne({ where: { id } });
-                if (purchase && purchase.shippingStatus === ShippingStatus.CANCELLED) {
+                if (purchase) {
                     const result = await this.purchaseModel.delete({ id });
                     if (result.affected > 0) {
                         success++;
@@ -314,5 +309,25 @@ export class PurchaseService {
         );
 
         return result.affected > 0;
+    }
+
+    /**
+     * 检查收货信息是否填写完整
+     */
+    async checkShippingInfoComplete(id: number, userId: number): Promise<{ isComplete: boolean }> {
+        // 查找订单
+        const purchase = await this.purchaseModel.findOne({
+            where: { id, userId },
+            select: ['receiverName', 'receiverPhone', 'shippingAddress']
+        });
+
+        if (!purchase) {
+            throw new Error('购买记录不存在或无权限操作');
+        }
+
+        // 检查收货信息是否完整
+        const isComplete = !!(purchase.receiverName && purchase.receiverPhone && purchase.shippingAddress);
+
+        return { isComplete };
     }
 } 

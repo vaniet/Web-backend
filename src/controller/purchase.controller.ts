@@ -73,7 +73,7 @@ export class PurchaseController {
     }
 
     /**
-     * 更新物流状态（管理员功能）
+     * 更新物流状态（管理员功能）  
      */
     @Put('/shipping/:id', { middleware: [JwtMiddleware] })
     async updateShippingStatus(@Param('id') id: number, @Body() data: UpdateShippingDTO) {
@@ -179,6 +179,20 @@ export class PurchaseController {
                 return ResponseResult.success(null, '收货信息设置成功');
             }
             return ResponseResult.error('设置失败', 500);
+        } catch (error) {
+            return ResponseResult.error(error.message);
+        }
+    }
+
+    /**
+     * 检查收货信息是否填写完整
+     */
+    @Get('/shipping-info/check/:id', { middleware: [JwtMiddleware] })
+    async checkShippingInfoComplete(@Param('id') id: number) {
+        try {
+            const userId = this.ctx.user.userId;
+            const result = await this.purchaseService.checkShippingInfoComplete(Number(id), userId);
+            return ResponseResult.success(result, '操作成功');
         } catch (error) {
             return ResponseResult.error(error.message);
         }
