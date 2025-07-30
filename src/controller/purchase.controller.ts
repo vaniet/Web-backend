@@ -197,4 +197,21 @@ export class PurchaseController {
             return ResponseResult.error(error.message);
         }
     }
+
+    /**
+     * 确认收货
+     */
+    @Put('/confirm-delivery/:id', { middleware: [JwtMiddleware] })
+    async confirmDelivery(@Param('id') id: number) {
+        try {
+            const userId = this.ctx.user.userId;
+            const result = await this.purchaseService.confirmDelivery(Number(id), userId);
+            if (result) {
+                return ResponseResult.success(null, '确认收货成功');
+            }
+            return ResponseResult.error('确认收货失败', 500);
+        } catch (error) {
+            return ResponseResult.error(error.message);
+        }
+    }
 } 

@@ -330,4 +330,34 @@ export class PurchaseService {
 
         return { isComplete };
     }
+
+    /**
+     * 确认收货
+     */
+    async confirmDelivery(id: number, userId: number): Promise<boolean> {
+        // 查找订单
+        const purchase = await this.purchaseModel.findOne({
+            where: { id, userId }
+        });
+
+        if (!purchase) {
+            throw new Error('购买记录不存在或无权限操作');
+        }
+
+        // 只有已发货状态的订单才能确认收货
+        if (purchase.shippingStatus !== ShippingStatus.SHIPPED) {
+            throw new Error('只有已发货状态的订单才能确认收货');
+        }
+
+        const result = await this.purchaseModel.update(
+            { id },
+            {
+                shippingStatus: ShippingStatus.DELIVERED,
+                deliveredAt: new Date(),
+                updatedAt: new Date()
+            }
+        );
+
+        return result.affected > 0;
+    }
 } 
