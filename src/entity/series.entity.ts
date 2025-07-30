@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Style } from './index';
 import { Stock } from './stock.entity';
 import { Purchase } from './purchase.entity';
+import { PlayerShow } from './player-show.entity';
 
 @Entity()
 export class Series {
@@ -32,4 +33,8 @@ export class Series {
     // 购买记录关联
     @OneToMany(() => Purchase, purchase => purchase.series)
     purchases: Purchase[];
+
+    // 玩家秀关联
+    @OneToMany(() => PlayerShow, playerShow => playerShow.series)
+    playerShows: PlayerShow[];
 }

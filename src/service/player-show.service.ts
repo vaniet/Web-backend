@@ -1,0 +1,295 @@
+import { Provide } from '@midwayjs/core';
+import { InjectEntityModel } from '@midwayjs/typeorm';
+import type { Repository } from 'typeorm';
+import { PlayerShow } from '../entity/player-show.entity';
+import { Purchase } from '../entity/purchase.entity';
+import { Series } from '../entity/series.entity';
+import { User } from '../entity/user.entity';
+import { 
+    CreatePlayerShowDTO, 
+    UpdatePlayerShowDTO, 
+    QueryPlayerShowDTO, 
+    PlayerShowResponseDTO 
+} from '../dto/player-show.dto';
+import { ShippingStatus } from '../entity/purchase.entity';
+
+@Provide()
+export class PlayerShowService {
+    @InjectEntityModel(PlayerShow)
+    playerShowModel: Repository<PlayerShow>;
+
+    @InjectEntityModel(Purchase)
+    purchaseModel: Repository<Purchase>;
+
+    @InjectEntityModel(Series)
+    seriesModel: Repository<Series>;
+
+    @InjectEntityModel(User)
+    userModel: Repository<User>;
+
+    /**
+     * 创建玩家秀
+     * @param userId 用户ID
+     * @param data 玩家秀数据
+     * @returns 创建的玩家秀
+     */
+    async createPlayerShow(userId: number, data: CreatePlayerShowDTO): Promise<PlayerShow> {
+        // 验证用户是否拥有该系列的已收货商品
+        const hasDeliveredPurchase = await this.purchaseModel.findOne({
+            where: {
+                userId,
+                seriesId: data.seriesId,
+                shippingStatus: ShippingStatus.DELIVERED
+            }
+        });
+
+        if (!hasDeliveredPurchase) {
+            throw new Error('您需要拥有该系列的已收货商品才能发布玩家秀');
+        }
+
+        // 验证系列是否存在
+        const series = await this.seriesModel.findOne({
+            where: { id: data.seriesId }
+        });
+
+        if (!series) {
+            throw new Error('系列不存在');
+        }
+
+        // 创建玩家秀
+        const playerShow = this.playerShowModel.create({
+            userId,
+            seriesId: data.seriesId,
+            title: data.title,
+            content: data.content,
+            images: JSON.stringify(data.images)
+        });
+
+        return await this.playerShowModel.save(playerShow);
+    }
+
+    /**
+     * 获取玩家秀列表
+     * @param query 查询条件
+     * @returns 玩家秀列表和总数
+     */
+    async getPlayerShows(query: QueryPlayerShowDTO): Promise<{ list: PlayerShowResponseDTO[], total: number }> {
+        const queryBuilder = this.playerShowModel.createQueryBuilder('playerShow')
+            .leftJoinAndSelect('playerShow.user', 'user')
+            .leftJoinAndSelect('playerShow.series', 'series')
+            .where('playerShow.isHidden = :isHidden', { isHidden: false });
+
+        // 添加查询条件
+        if (query.seriesId) {
+            queryBuilder.andWhere('playerShow.seriesId = :seriesId', { seriesId: query.seriesId });
+        }
+
+        if (query.userId) {
+            queryBuilder.andWhere('playerShow.userId = :userId', { userId: query.userId });
+        }
+
+
+
+        if (query.isPinned !== undefined) {
+            queryBuilder.andWhere('playerShow.isPinned = :isPinned', { isPinned: query.isPinned });
+        }
+
+        // 排序
+        const orderBy = query.orderBy || 'createdAt';
+        const orderDirection = query.orderDirection || 'DESC';
+        queryBuilder.orderBy(`playerShow.${orderBy}`, orderDirection);
+
+        // 分页
+        const page = query.page || 1;
+        const limit = query.limit || 10;
+        const offset = (page - 1) * limit;
+
+        queryBuilder.skip(offset).take(limit);
+
+        const [list, total] = await queryBuilder.getManyAndCount();
+
+        // 转换为响应DTO
+        const responseList: PlayerShowResponseDTO[] = list.map(item => ({
+            id: item.id,
+            userId: item.userId,
+            seriesId: item.seriesId,
+            title: item.title,
+            content: item.content,
+            images: JSON.parse(item.images),
+            likes: item.likes,
+            comments: item.comments,
+            isPinned: item.isPinned,
+            isHidden: item.isHidden,
+            createdAt: item.createdAt,
+            user: item.user ? {
+                userId: item.user.userId,
+                username: item.user.username,
+                avatar: item.user.avatar
+            } : undefined,
+            series: item.series ? {
+                id: item.series.id,
+                name: item.series.name,
+                cover: item.series.cover
+            } : undefined
+        }));
+
+        return { list: responseList, total };
+    }
+
+    /**
+     * 获取玩家秀详情
+     * @param id 玩家秀ID
+     * @returns 玩家秀详情
+     */
+    async getPlayerShowById(id: number): Promise<PlayerShowResponseDTO | null> {
+        const playerShow = await this.playerShowModel.findOne({
+            where: { id },
+            relations: ['user', 'series']
+        });
+
+        if (!playerShow) {
+            return null;
+        }
+
+        return {
+            id: playerShow.id,
+            userId: playerShow.userId,
+            seriesId: playerShow.seriesId,
+            title: playerShow.title,
+            content: playerShow.content,
+            images: JSON.parse(playerShow.images),
+            likes: playerShow.likes,
+            comments: playerShow.comments,
+            isPinned: playerShow.isPinned,
+            isHidden: playerShow.isHidden,
+            createdAt: playerShow.createdAt,
+            user: playerShow.user ? {
+                userId: playerShow.user.userId,
+                username: playerShow.user.username,
+                avatar: playerShow.user.avatar
+            } : undefined,
+            series: playerShow.series ? {
+                id: playerShow.series.id,
+                name: playerShow.series.name,
+                cover: playerShow.series.cover
+            } : undefined
+        };
+    }
+
+    /**
+     * 更新玩家秀
+     * @param id 玩家秀ID
+     * @param userId 用户ID
+     * @param data 更新数据
+     * @returns 更新后的玩家秀
+     */
+    async updatePlayerShow(id: number, userId: number, data: UpdatePlayerShowDTO): Promise<PlayerShow> {
+        const playerShow = await this.playerShowModel.findOne({
+            where: { id, userId }
+        });
+
+        if (!playerShow) {
+            throw new Error('玩家秀不存在或无权限修改');
+        }
+
+
+
+        // 更新字段
+        if (data.title !== undefined) {
+            playerShow.title = data.title;
+        }
+        if (data.content !== undefined) {
+            playerShow.content = data.content;
+        }
+        if (data.images !== undefined) {
+            playerShow.images = JSON.stringify(data.images);
+        }
+
+        return await this.playerShowModel.save(playerShow);
+    }
+
+    /**
+     * 删除玩家秀
+     * @param id 玩家秀ID
+     * @param userId 用户ID
+     * @returns 是否删除成功
+     */
+    async deletePlayerShow(id: number, userId: number): Promise<boolean> {
+        const playerShow = await this.playerShowModel.findOne({
+            where: { id, userId }
+        });
+
+        if (!playerShow) {
+            throw new Error('玩家秀不存在或无权限删除');
+        }
+
+        await this.playerShowModel.remove(playerShow);
+        return true;
+    }
+
+
+
+    /**
+     * 点赞/取消点赞玩家秀
+     * @param id 玩家秀ID
+     * @param isLike 是否点赞
+     * @returns 更新后的玩家秀
+     */
+    async likePlayerShow(id: number, isLike: boolean): Promise<PlayerShow> {
+        const playerShow = await this.playerShowModel.findOne({
+            where: { id }
+        });
+
+        if (!playerShow) {
+            throw new Error('玩家秀不存在');
+        }
+
+        if (isLike) {
+            playerShow.likes += 1;
+        } else {
+            playerShow.likes = Math.max(0, playerShow.likes - 1);
+        }
+
+        return await this.playerShowModel.save(playerShow);
+    }
+
+    /**
+     * 置顶/取消置顶玩家秀
+     * @param id 玩家秀ID
+     * @param isPinned 是否置顶
+     * @returns 更新后的玩家秀
+     */
+    async pinPlayerShow(id: number, isPinned: boolean): Promise<PlayerShow> {
+        const playerShow = await this.playerShowModel.findOne({
+            where: { id }
+        });
+
+        if (!playerShow) {
+            throw new Error('玩家秀不存在');
+        }
+
+        playerShow.isPinned = isPinned;
+
+        return await this.playerShowModel.save(playerShow);
+    }
+
+    /**
+     * 隐藏/显示玩家秀
+     * @param id 玩家秀ID
+     * @param isHidden 是否隐藏
+     * @returns 更新后的玩家秀
+     */
+    async hidePlayerShow(id: number, isHidden: boolean): Promise<PlayerShow> {
+        const playerShow = await this.playerShowModel.findOne({
+            where: { id }
+        });
+
+        if (!playerShow) {
+            throw new Error('玩家秀不存在');
+        }
+
+        playerShow.isHidden = isHidden;
+
+        return await this.playerShowModel.save(playerShow);
+    }
+} 

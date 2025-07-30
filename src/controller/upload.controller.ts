@@ -18,7 +18,7 @@ export class UploadController {
         if (!type || !name) {
             return { error: 'Missing type or name' };
         }
-        // 支持 avatar 类型
+        // 支持 avatar 和 player-show 类型
         const folder =
             type === 'series'
                 ? 'series'
@@ -26,7 +26,9 @@ export class UploadController {
                     ? 'styles'
                     : type === 'avatar'
                         ? 'avatar'
-                        : 'other';
+                        : type === 'player-show'
+                            ? 'player-show'
+                            : 'other';
         const uploadDir = join(process.cwd(), 'public', folder);
         if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true });
         const ext = files[0].filename.substring(files[0].filename.lastIndexOf('.'));

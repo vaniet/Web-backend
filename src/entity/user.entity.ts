@@ -1,6 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { UserRole } from '../dto/index'
 import { Purchase } from './purchase.entity';
+import { PlayerShow } from './player-show.entity';
 
 @Entity('user') // 对应数据库表名
 export class User {
@@ -71,4 +72,8 @@ export class User {
     // 购买记录关联
     @OneToMany(() => Purchase, purchase => purchase.user)
     purchases: Purchase[];
+
+    // 玩家秀关联
+    @OneToMany(() => PlayerShow, playerShow => playerShow.user)
+    playerShows: PlayerShow[];
 }

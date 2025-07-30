@@ -86,7 +86,7 @@ export class UserController {
                 return ResponseResult.error('未登录或会话已过期', 401);
             }
 
-            console.log('getCurrentUser - Payload userId:', payload.userId);
+            //console.log('getCurrentUser - Payload userId:', payload.userId);
 
             // 根据userId从数据库获取最新用户信息
             const user = await this.userService.getUserById(payload.userId);
@@ -95,13 +95,13 @@ export class UserController {
                 return ResponseResult.error('用户不存在', 404);
             }
 
-            console.log('getCurrentUser - User found:', user);
+            //console.log('getCurrentUser - User found:', user);
 
             // 移除密码字段
             const { password, ...userWithoutPassword } = user;
             return ResponseResult.success(userWithoutPassword, '获取当前用户信息成功');
         } catch (error) {
-            console.log('getCurrentUser - Error:', error);
+            //console.log('getCurrentUser - Error:', error);
             return ResponseResult.error(error.message || '获取用户信息失败', 500);
         }
     }
