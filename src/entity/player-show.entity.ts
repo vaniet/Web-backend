@@ -37,14 +37,6 @@ export class PlayerShow {
     @Column({ type: 'text', nullable: false })
     images: string; // JSON字符串，存储图片URL数组
 
-    // 点赞数
-    @Column({ type: 'int', default: 0 })
-    likes: number;
-
-    // 评论数
-    @Column({ type: 'int', default: 0 })
-    comments: number;
-
     // 是否置顶
     @Column({ type: 'boolean', default: false })
     isPinned: boolean;

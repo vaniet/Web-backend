@@ -36,14 +36,6 @@ export class PlayerShow {
     @Column({ type: 'text', nullable: false })
     images: string;
 
-    // 点赞数
-    @Column({ type: 'int', default: 0 })
-    likes: number;
-
-    // 评论数
-    @Column({ type: 'int', default: 0 })
-    comments: number;
-
     // 是否置顶
     @Column({ type: 'boolean', default: false })
     isPinned: boolean;
@@ -76,34 +68,26 @@ export class PlayerShow {
 - **权限**: 公开接口
 - **功能**: 获取指定玩家秀的详细信息
 
-### 4. 更新玩家秀
-- **接口**: `PUT /player-shows/:id`
-- **权限**: 需要登录，只能修改自己的玩家秀
-- **功能**: 更新玩家秀内容（仅限待审核状态）
 
-### 5. 删除玩家秀
+
+### 4. 删除玩家秀
 - **接口**: `DELETE /player-shows/:id`
 - **权限**: 需要登录，只能删除自己的玩家秀
 - **功能**: 删除指定的玩家秀
 
-### 6. 点赞/取消点赞
-- **接口**: `POST /player-shows/like`
-- **权限**: 需要登录
-- **功能**: 对玩家秀进行点赞或取消点赞
-
-### 7. 获取我的玩家秀
+### 5. 获取我的玩家秀
 - **接口**: `GET /player-shows/my/list`
 - **权限**: 需要登录
 - **功能**: 获取当前用户的玩家秀列表
 
-### 8. 管理员接口
+### 6. 管理员接口
 
-#### 8.1 置顶/取消置顶
+#### 6.1 置顶/取消置顶
 - **接口**: `POST /player-shows/admin/:id/pin`
 - **权限**: 需要管理员权限
 - **功能**: 置顶或取消置顶玩家秀
 
-#### 8.2 隐藏/显示
+#### 6.2 隐藏/显示
 - **接口**: `POST /player-shows/admin/:id/hide`
 - **权限**: 需要管理员权限
 - **功能**: 隐藏或显示玩家秀

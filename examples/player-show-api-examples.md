@@ -27,14 +27,9 @@ curl -X POST http://localhost:7001/player-shows/create \
     "title": "我的第一个玩家秀",
     "content": "这是我购买的盲盒，非常喜欢！",
     "images": "[\"player-show/test1.jpg\",\"player-show/test2.jpg\"]",
-    "likes": 0,
-    "comments": 0,
     "isPinned": false,
     "isHidden": false,
-    "status": "pending",
-    "reviewNote": null,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
+    "createdAt": "2024-01-01T00:00:00.000Z"
   },
   "timestamp": 1704067200000
 }
@@ -61,14 +56,9 @@ curl -X GET "http://localhost:7001/player-shows/list?page=1&limit=10&seriesId=1&
         "title": "我的第一个玩家秀",
         "content": "这是我购买的盲盒，非常喜欢！",
         "images": ["player-show/test1.jpg", "player-show/test2.jpg"],
-        "likes": 5,
-        "comments": 2,
         "isPinned": false,
         "isHidden": false,
-        "status": "approved",
-        "reviewNote": null,
         "createdAt": "2024-01-01T00:00:00.000Z",
-        "updatedAt": "2024-01-01T00:00:00.000Z",
         "user": {
           "userId": 1,
           "username": "testuser",
@@ -105,15 +95,10 @@ curl -X GET http://localhost:7001/player-shows/1
     "seriesId": 1,
     "title": "我的第一个玩家秀",
     "content": "这是我购买的盲盒，非常喜欢！",
-    "images": ["player-show/test1.jpg", "player-show/test2.jpg"],
-    "likes": 5,
-    "comments": 2,
-    "isPinned": false,
-    "isHidden": false,
-    "status": "approved",
-    "reviewNote": null,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z",
+            "images": ["player-show/test1.jpg", "player-show/test2.jpg"],
+        "isPinned": false,
+            "isHidden": false,
+        "createdAt": "2024-01-01T00:00:00.000Z",
     "user": {
       "userId": 1,
       "username": "testuser",
@@ -129,34 +114,7 @@ curl -X GET http://localhost:7001/player-shows/1
 }
 ```
 
-## 4. 更新玩家秀
-
-### 请求示例
-```bash
-curl -X PUT http://localhost:7001/player-shows/1 \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "title": "更新后的标题",
-    "content": "更新后的内容",
-    "images": ["player-show/updated1.jpg", "player-show/updated2.jpg"]
-  }'
-```
-
-## 5. 点赞玩家秀
-
-### 请求示例
-```bash
-curl -X POST http://localhost:7001/player-shows/like \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "playerShowId": 1,
-    "isLike": true
-  }'
-```
-
-## 6. 获取我的玩家秀
+## 4. 获取我的玩家秀
 
 ### 请求示例
 ```bash
@@ -164,24 +122,7 @@ curl -X GET "http://localhost:7001/player-shows/my/list?page=1&limit=10" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-## 7. 管理员接口
-
-### 获取待审核列表
-```bash
-curl -X GET "http://localhost:7001/player-shows/admin/pending?page=1&limit=10" \
-  -H "Authorization: Bearer ADMIN_JWT_TOKEN"
-```
-
-### 审核玩家秀
-```bash
-curl -X POST http://localhost:7001/player-shows/admin/1/review \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
-  -d '{
-    "status": "approved",
-    "reviewNote": "内容符合规范，通过审核"
-  }'
-```
+## 5. 管理员接口
 
 ### 置顶玩家秀
 ```bash
@@ -247,22 +188,7 @@ async function getPlayerShows(params: any = {}) {
   return await response.json();
 }
 
-// 点赞玩家秀
-async function likePlayerShow(token: string, playerShowId: number, isLike: boolean) {
-  const response = await fetch('http://localhost:7001/player-shows/like', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      playerShowId,
-      isLike
-    })
-  });
-  
-  return await response.json();
-}
+
 ```
 
 ## 图片上传示例

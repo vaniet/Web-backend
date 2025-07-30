@@ -1,10 +1,8 @@
 import { Controller, Post, Get, Put, Del, Body, Param, Query, Inject, HttpCode } from '@midwayjs/core';
 import { PlayerShowService } from '../service/player-show.service';
-import {
-    CreatePlayerShowDTO,
-    UpdatePlayerShowDTO,
-    QueryPlayerShowDTO,
-    LikePlayerShowDTO
+import { 
+    CreatePlayerShowDTO, 
+    QueryPlayerShowDTO
 } from '../dto/player-show.dto';
 import { ResponseResult } from '../common/index';
 import { JwtMiddleware } from '../middleware/jwt.middleware';
@@ -64,20 +62,7 @@ export class PlayerShowController {
         }
     }
 
-    /**
-     * 更新玩家秀
-     */
-    @Put('/:id', { middleware: [JwtMiddleware], description: '更新玩家秀' })
-    @HttpCode(200)
-    public async updatePlayerShow(@Param('id') id: number, @Body() data: UpdatePlayerShowDTO) {
-        try {
-            const userId = this.ctx.user.userId;
-            const playerShow = await this.playerShowService.updatePlayerShow(id, userId, data);
-            return ResponseResult.success(playerShow, '玩家秀更新成功');
-        } catch (error) {
-            return ResponseResult.error(error.message || '更新玩家秀失败', 400);
-        }
-    }
+
 
     /**
      * 删除玩家秀
@@ -94,19 +79,7 @@ export class PlayerShowController {
         }
     }
 
-    /**
-     * 点赞/取消点赞玩家秀
-     */
-    @Post('/like', { middleware: [JwtMiddleware], description: '点赞/取消点赞玩家秀' })
-    @HttpCode(200)
-    public async likePlayerShow(@Body() data: LikePlayerShowDTO) {
-        try {
-            const playerShow = await this.playerShowService.likePlayerShow(data.playerShowId, data.isLike);
-            return ResponseResult.success(playerShow, data.isLike ? '点赞成功' : '取消点赞成功');
-        } catch (error) {
-            return ResponseResult.error(error.message || '操作失败', 400);
-        }
-    }
+
 
     /**
      * 获取我的玩家秀列表

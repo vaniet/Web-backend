@@ -5,11 +5,10 @@ import { PlayerShow } from '../entity/player-show.entity';
 import { Purchase } from '../entity/purchase.entity';
 import { Series } from '../entity/series.entity';
 import { User } from '../entity/user.entity';
-import { 
-    CreatePlayerShowDTO, 
-    UpdatePlayerShowDTO, 
-    QueryPlayerShowDTO, 
-    PlayerShowResponseDTO 
+import {
+    CreatePlayerShowDTO,
+    QueryPlayerShowDTO,
+    PlayerShowResponseDTO
 } from '../dto/player-show.dto';
 import { ShippingStatus } from '../entity/purchase.entity';
 
@@ -116,8 +115,6 @@ export class PlayerShowService {
             title: item.title,
             content: item.content,
             images: JSON.parse(item.images),
-            likes: item.likes,
-            comments: item.comments,
             isPinned: item.isPinned,
             isHidden: item.isHidden,
             createdAt: item.createdAt,
@@ -158,8 +155,6 @@ export class PlayerShowService {
             title: playerShow.title,
             content: playerShow.content,
             images: JSON.parse(playerShow.images),
-            likes: playerShow.likes,
-            comments: playerShow.comments,
             isPinned: playerShow.isPinned,
             isHidden: playerShow.isHidden,
             createdAt: playerShow.createdAt,
@@ -176,37 +171,7 @@ export class PlayerShowService {
         };
     }
 
-    /**
-     * 更新玩家秀
-     * @param id 玩家秀ID
-     * @param userId 用户ID
-     * @param data 更新数据
-     * @returns 更新后的玩家秀
-     */
-    async updatePlayerShow(id: number, userId: number, data: UpdatePlayerShowDTO): Promise<PlayerShow> {
-        const playerShow = await this.playerShowModel.findOne({
-            where: { id, userId }
-        });
 
-        if (!playerShow) {
-            throw new Error('玩家秀不存在或无权限修改');
-        }
-
-
-
-        // 更新字段
-        if (data.title !== undefined) {
-            playerShow.title = data.title;
-        }
-        if (data.content !== undefined) {
-            playerShow.content = data.content;
-        }
-        if (data.images !== undefined) {
-            playerShow.images = JSON.stringify(data.images);
-        }
-
-        return await this.playerShowModel.save(playerShow);
-    }
 
     /**
      * 删除玩家秀
@@ -229,29 +194,7 @@ export class PlayerShowService {
 
 
 
-    /**
-     * 点赞/取消点赞玩家秀
-     * @param id 玩家秀ID
-     * @param isLike 是否点赞
-     * @returns 更新后的玩家秀
-     */
-    async likePlayerShow(id: number, isLike: boolean): Promise<PlayerShow> {
-        const playerShow = await this.playerShowModel.findOne({
-            where: { id }
-        });
 
-        if (!playerShow) {
-            throw new Error('玩家秀不存在');
-        }
-
-        if (isLike) {
-            playerShow.likes += 1;
-        } else {
-            playerShow.likes = Math.max(0, playerShow.likes - 1);
-        }
-
-        return await this.playerShowModel.save(playerShow);
-    }
 
     /**
      * 置顶/取消置顶玩家秀

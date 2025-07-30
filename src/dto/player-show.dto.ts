@@ -6,12 +6,7 @@ export class CreatePlayerShowDTO {
     images: string[]; // 图片URL数组
 }
 
-// 更新玩家秀DTO
-export class UpdatePlayerShowDTO {
-    title?: string;
-    content?: string;
-    images?: string[]; // 图片URL数组
-}
+
 
 // 查询玩家秀DTO
 export class QueryPlayerShowDTO {
@@ -21,15 +16,11 @@ export class QueryPlayerShowDTO {
     isHidden?: boolean;
     page?: number;
     limit?: number;
-    orderBy?: 'createdAt' | 'likes' | 'comments';
+    orderBy?: 'createdAt';
     orderDirection?: 'ASC' | 'DESC';
 }
 
-// 点赞玩家秀DTO
-export class LikePlayerShowDTO {
-    playerShowId: number;
-    isLike: boolean; // true为点赞，false为取消点赞
-}
+
 
 // 玩家秀响应DTO
 export class PlayerShowResponseDTO {
@@ -39,8 +30,6 @@ export class PlayerShowResponseDTO {
     title: string;
     content: string;
     images: string[];
-    likes: number;
-    comments: number;
     isPinned: boolean;
     isHidden: boolean;
     createdAt: Date;
