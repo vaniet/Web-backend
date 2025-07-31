@@ -12,18 +12,30 @@ export class CreatePlayerShowDTO {
 export class QueryPlayerShowDTO {
     seriesId?: number;
     userId?: number;
-    isPinned?: boolean;
-    isHidden?: boolean;
     page?: number;
     limit?: number;
     orderBy?: 'createdAt';
     orderDirection?: 'ASC' | 'DESC';
 }
 
+// 玩家秀列表响应DTO
+export class PlayerShowListResponseDTO {
+    id: number;
+    userId: number;
+    title: string;
+    firstImage: string; // 第一张图片
+    createdAt: Date; // 创建日期
+    
+    // 关联数据
+    user?: {
+        userId: number;
+        username: string;
+        avatar?: string;
+    };
+}
 
-
-// 玩家秀响应DTO
-export class PlayerShowResponseDTO {
+// 玩家秀详情响应DTO
+export class PlayerShowDetailResponseDTO {
     id: number;
     userId: number;
     seriesId: number;

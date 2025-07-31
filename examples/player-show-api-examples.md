@@ -35,7 +35,7 @@ curl -X POST http://localhost:7001/player-shows/create \
 }
 ```
 
-## 2. 获取玩家秀列表
+## 2. 获取所有玩家秀列表
 
 ### 请求示例
 ```bash
@@ -46,28 +46,19 @@ curl -X GET "http://localhost:7001/player-shows/list?page=1&limit=10&seriesId=1&
 ```json
 {
   "code": 200,
-  "message": "获取玩家秀列表成功",
+  "message": "获取所有玩家秀列表成功",
   "data": {
     "list": [
       {
         "id": 1,
         "userId": 1,
-        "seriesId": 1,
         "title": "我的第一个玩家秀",
-        "content": "这是我购买的盲盒，非常喜欢！",
-        "images": ["player-show/test1.jpg", "player-show/test2.jpg"],
-        "isPinned": false,
-        "isHidden": false,
+        "firstImage": "player-show/test1.jpg",
         "createdAt": "2024-01-01T00:00:00.000Z",
         "user": {
           "userId": 1,
           "username": "testuser",
           "avatar": "avatar/test.jpg"
-        },
-        "series": {
-          "id": 1,
-          "name": "经典系列",
-          "cover": "series/classic.jpg"
         }
       }
     ],
@@ -114,7 +105,7 @@ curl -X GET http://localhost:7001/player-shows/1
 }
 ```
 
-## 4. 获取我的玩家秀
+## 4. 获取我的玩家秀列表
 
 ### 请求示例
 ```bash
@@ -122,17 +113,35 @@ curl -X GET "http://localhost:7001/player-shows/my/list?page=1&limit=10" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-## 5. 管理员接口
-
-### 置顶玩家秀
-```bash
-curl -X POST http://localhost:7001/player-shows/admin/1/pin \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ADMIN_JWT_TOKEN" \
-  -d '{
-    "isPinned": true
-  }'
+### 响应示例
+```json
+{
+  "code": 200,
+  "message": "获取我的玩家秀列表成功",
+  "data": {
+    "list": [
+      {
+        "id": 1,
+        "userId": 1,
+        "title": "我的第一个玩家秀",
+        "firstImage": "player-show/test1.jpg",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "user": {
+          "userId": 1,
+          "username": "testuser",
+          "avatar": "avatar/test.jpg"
+        }
+      }
+    ],
+    "total": 1
+  },
+  "timestamp": 1704067200000
+}
 ```
+
+## 5. 删除玩家秀
+
+
 
 ## 错误响应示例
 
@@ -180,8 +189,8 @@ async function createPlayerShow(token: string, data: any) {
   return await response.json();
 }
 
-// 获取玩家秀列表
-async function getPlayerShows(params: any = {}) {
+// 获取所有玩家秀列表
+async function getAllPlayerShows(params: any = {}) {
   const queryString = new URLSearchParams(params).toString();
   const response = await fetch(`http://localhost:7001/player-shows/list?${queryString}`);
   

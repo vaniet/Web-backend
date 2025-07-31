@@ -1,7 +1,7 @@
-import { Controller, Post, Get, Put, Del, Body, Param, Query, Inject, HttpCode } from '@midwayjs/core';
+import { Controller, Post, Get, Del, Body, Param, Query, Inject, HttpCode } from '@midwayjs/core';
 import { PlayerShowService } from '../service/player-show.service';
-import { 
-    CreatePlayerShowDTO, 
+import {
+    CreatePlayerShowDTO,
     QueryPlayerShowDTO
 } from '../dto/player-show.dto';
 import { ResponseResult } from '../common/index';
@@ -32,16 +32,16 @@ export class PlayerShowController {
     }
 
     /**
-     * 获取玩家秀列表
+     * 获取所有玩家秀列表
      */
-    @Get('/list', { description: '获取玩家秀列表' })
+    @Get('/list', { description: '获取所有玩家秀列表' })
     @HttpCode(200)
-    public async getPlayerShows(@Query() query: QueryPlayerShowDTO) {
+    public async getAllPlayerShows(@Query() query: QueryPlayerShowDTO) {
         try {
-            const result = await this.playerShowService.getPlayerShows(query);
-            return ResponseResult.success(result, '获取玩家秀列表成功');
+            const result = await this.playerShowService.getAllPlayerShows(query);
+            return ResponseResult.success(result, '获取所有玩家秀列表成功');
         } catch (error) {
-            return ResponseResult.error(error.message || '获取玩家秀列表失败', 500);
+            return ResponseResult.error(error.message || '获取所有玩家秀列表失败', 500);
         }
     }
 
@@ -89,8 +89,7 @@ export class PlayerShowController {
     public async getMyPlayerShows(@Query() query: QueryPlayerShowDTO) {
         try {
             const userId = this.ctx.user.userId;
-            query.userId = userId;
-            const result = await this.playerShowService.getPlayerShows(query);
+            const result = await this.playerShowService.getMyPlayerShows(userId, query);
             return ResponseResult.success(result, '获取我的玩家秀列表成功');
         } catch (error) {
             return ResponseResult.error(error.message || '获取我的玩家秀列表失败', 500);
@@ -99,33 +98,5 @@ export class PlayerShowController {
 
 
 
-    /**
-     * 置顶/取消置顶玩家秀（管理员接口）
-     */
-    @Post('/admin/:id/pin', { middleware: [JwtMiddleware], description: '置顶/取消置顶玩家秀' })
-    @HttpCode(200)
-    public async pinPlayerShow(@Param('id') id: number, @Body() data: { isPinned: boolean }) {
-        try {
-            // 这里可以添加管理员权限验证
-            const playerShow = await this.playerShowService.pinPlayerShow(id, data.isPinned);
-            return ResponseResult.success(playerShow, data.isPinned ? '置顶成功' : '取消置顶成功');
-        } catch (error) {
-            return ResponseResult.error(error.message || '操作失败', 400);
-        }
-    }
 
-    /**
-     * 隐藏/显示玩家秀（管理员接口）
-     */
-    @Post('/admin/:id/hide', { middleware: [JwtMiddleware], description: '隐藏/显示玩家秀' })
-    @HttpCode(200)
-    public async hidePlayerShow(@Param('id') id: number, @Body() data: { isHidden: boolean }) {
-        try {
-            // 这里可以添加管理员权限验证
-            const playerShow = await this.playerShowService.hidePlayerShow(id, data.isHidden);
-            return ResponseResult.success(playerShow, data.isHidden ? '隐藏成功' : '显示成功');
-        } catch (error) {
-            return ResponseResult.error(error.message || '操作失败', 400);
-        }
-    }
 } 
