@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne } from 'typeorm';
 import { Style } from './index';
 import { Stock } from './stock.entity';
 import { Purchase } from './purchase.entity';
 import { PlayerShow } from './player-show.entity';
+import { Price } from './price.entity';
 
 @Entity()
 export class Series {
@@ -37,4 +38,8 @@ export class Series {
     // 玩家秀关联
     @OneToMany(() => PlayerShow, playerShow => playerShow.series)
     playerShows: PlayerShow[];
+
+    // 价格关联
+    @OneToOne(() => Price, price => price.series)
+    price: Price;
 }
