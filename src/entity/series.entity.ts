@@ -4,6 +4,7 @@ import { Stock } from './stock.entity';
 import { Purchase } from './purchase.entity';
 import { PlayerShow } from './player-show.entity';
 import { Price } from './price.entity';
+import { Message } from './message.entity';
 
 @Entity()
 export class Series {
@@ -42,4 +43,8 @@ export class Series {
     // 价格关联
     @OneToOne(() => Price, price => price.series)
     price: Price;
+
+    // 消息关联
+    @OneToMany(() => Message, message => message.series)
+    messages: Message[];
 }

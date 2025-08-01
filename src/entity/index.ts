@@ -5,3 +5,4 @@ export { Stock } from './stock.entity';
 export { Purchase } from './purchase.entity';
 export { PlayerShow } from './player-show.entity';
 export { Price } from './price.entity';
+export { Message } from './message.entity';

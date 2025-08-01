@@ -4,6 +4,7 @@ import type { Repository } from 'typeorm';
 import { Series } from '../entity/series.entity';
 import { Style } from '../entity/style.entity';
 import { Stock } from '../entity/stock.entity';
+import { Message } from '../entity/message.entity';
 import { CreateSeriesDTO } from '../dto/series.dto';
 import { join } from 'path';
 import { existsSync, unlinkSync } from 'fs';
@@ -18,6 +19,9 @@ export class SeriesService {
 
   @InjectEntityModel(Stock)
   stockModel: Repository<Stock>;
+
+  @InjectEntityModel(Message)
+  messageModel: Repository<Message>;
 
   /**
    * 创建新系列及其款式
@@ -45,6 +49,19 @@ export class SeriesService {
       });
     });
     await this.styleModel.save(styles);
+
+    // 创建消息记录，合并系列名、简介、细节为长字符串
+    const messageContent = [
+      data.name,
+      data.description || '',
+      data.detail || ''
+    ].filter(Boolean).join('\n\n');
+
+    const newMessage = this.messageModel.create({
+      seriesId: savedSeries.id,
+      content: messageContent,
+    });
+    await this.messageModel.save(newMessage);
 
     // 返回带 styles 的系列
     savedSeries.styles = styles;
@@ -85,6 +102,9 @@ export class SeriesService {
       await this.styleModel.delete({ seriesId });
     }
 
+    // 删除消息记录
+    await this.messageModel.delete({ seriesId });
+
     // 删除库存记录
     await this.stockModel.delete({ seriesId });
 
@@ -108,7 +128,7 @@ export class SeriesService {
     if (style.cover) {
       const styleCoverPath = join(process.cwd(), 'public', style.cover);
       if (existsSync(styleCoverPath)) {
-        try { unlinkSync(styleCoverPath); } catch {}
+        try { unlinkSync(styleCoverPath); } catch { }
       }
     }
 

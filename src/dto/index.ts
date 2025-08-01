@@ -1,3 +1,4 @@
 export * from './user.dto';
 export * from './player-show.dto';
 export * from './price.dto';
+export * from './message.dto';
