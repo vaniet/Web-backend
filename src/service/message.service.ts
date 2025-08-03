@@ -3,6 +3,7 @@ import { InjectEntityModel } from '@midwayjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Message } from '../entity/message.entity';
 import { Series } from '../entity/series.entity';
+import { Style } from '../entity/style.entity';
 import { CreateMessageDTO, UpdateMessageDTO } from '../dto/message.dto';
 
 @Provide()
@@ -12,6 +13,9 @@ export class MessageService {
 
     @InjectEntityModel(Series)
     seriesModel: Repository<Series>;
+
+    @InjectEntityModel(Style)
+    styleModel: Repository<Style>;
 
     /**
      * 创建新消息
@@ -33,9 +37,22 @@ export class MessageService {
             throw new Error('该系列已存在消息记录');
         }
 
+        // 获取系列包含的款式名称
+        const styles = await this.styleModel.find({
+            where: { seriesId: data.seriesId },
+            select: ['name']
+        });
+
+        const styleNames = styles.map(style => style.name).join('');
+
+        // 在原有内容基础上添加款式名称
+        const contentWithStyles = styleNames ?
+            `${data.content}${styleNames}` :
+            data.content;
+
         const newMessage = this.messageModel.create({
             seriesId: data.seriesId,
-            content: data.content,
+            content: contentWithStyles,
         });
         return await this.messageModel.save(newMessage);
     }
