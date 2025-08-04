@@ -50,7 +50,8 @@
     "lint": "mwts check",
     "lint:fix": "mwts fix",
     "ci": "npm run cov",
-    "build": "mwtsc --cleanOutDir"
+    "build": "mwtsc --cleanOutDir",
+    "clean-logs": "node scripts/clean-logs.js"
   },
   "repository": {
     "type": "git",

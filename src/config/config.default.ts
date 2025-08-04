@@ -16,7 +16,7 @@ export default {
         type: 'sqlite',
         database: 'webdevapi.db',
         synchronize: true,
-        logging: true,
+        logging: false, // 关闭SQL日志，减少冗余
         entities: [
           ...Object.values(entity)
         ],
@@ -31,5 +31,26 @@ export default {
     mode: 'file',
     fileSize: '5mb',
     whitelist: ['.png', '.jpg', '.jpeg', '.gif'],
+  },
+  // 日志配置优化
+  logger: {
+    level: 'info',
+    consoleLevel: 'info',
+    // 自定义日志格式，省略敏感信息
+    format: (info: any) => {
+      const { timestamp, level, message, ...rest } = info;
+      // 过滤掉敏感信息
+      const filteredRest = { ...rest };
+      delete filteredRest.headers;
+      delete filteredRest.query;
+      delete filteredRest.parameters;
+
+      return {
+        timestamp,
+        level,
+        message,
+        ...filteredRest
+      };
+    }
   }
 } as MidwayConfig;

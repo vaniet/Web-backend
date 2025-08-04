@@ -5,19 +5,53 @@ import { NextFunction, Context } from '@midwayjs/koa';
 export class ReportMiddleware implements IMiddleware<Context, NextFunction> {
   resolve() {
     return async (ctx: Context, next: NextFunction) => {
-      // 控制器前执行的逻辑
       const startTime = Date.now();
-      // 执行下一个 Web 中间件，最后执行到控制器
-      // 这里可以拿到下一个中间件或者控制器的返回值
-      const result = await next();
-      // 控制器之后执行的逻辑
-      ctx.logger.info(
-        `Report in "src/middleware/report.middleware.ts", rt = ${
-          Date.now() - startTime
-        }ms`
-      );
-      // 返回给上一个中间件的结果
-      return result;
+
+      try {
+        const result = await next();
+        const responseTime = Date.now() - startTime;
+
+        // 只记录关键信息，省略敏感数据
+        const logInfo = {
+          method: ctx.method,
+          url: ctx.url,
+          status: ctx.status,
+          responseTime: `${responseTime}ms`,
+          userAgent: ctx.get('User-Agent')?.substring(0, 50) || 'Unknown'
+        };
+
+        // 根据响应时间分类日志级别
+        if (responseTime > 1000) {
+          ctx.logger.warn('Slow request detected', logInfo);
+        } else if (responseTime > 500) {
+          ctx.logger.info('Request completed', logInfo);
+        } else {
+          ctx.logger.debug('Request completed', logInfo);
+        }
+
+        return result;
+      } catch (error) {
+        const responseTime = Date.now() - startTime;
+
+        // 错误日志，省略敏感信息
+        const errorInfo = {
+          method: ctx.method,
+          url: ctx.url,
+          status: ctx.status || 500,
+          responseTime: `${responseTime}ms`,
+          error: error.message || 'Unknown error',
+          errorType: error.constructor.name
+        };
+
+        // 过滤掉SQL错误中的敏感查询信息
+        if (error.message?.includes('SQLITE_ERROR')) {
+          errorInfo.error = 'Database query error';
+          errorInfo.errorType = 'DatabaseError';
+        }
+
+        ctx.logger.error('Request failed', errorInfo);
+        throw error;
+      }
     };
   }
 
