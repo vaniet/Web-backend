@@ -1,6 +1,6 @@
-import { Controller, Post, Body, Inject, HttpCode, Del, Param } from '@midwayjs/core';
+import { Controller, Post, Body, Inject, HttpCode, Del, Param, Put } from '@midwayjs/core';
 import { UserService } from '../service/user.service';
-import { CreateUserDTO, LoginDTO } from '../dto/index';
+import { CreateUserDTO, LoginDTO, UpdateUserDTO } from '../dto/index';
 import { ResponseResult } from '../common/index';
 import { JwtService } from '@midwayjs/jwt';
 import { Context } from '@midwayjs/koa';
@@ -103,6 +103,85 @@ export class UserController {
         } catch (error) {
             //console.log('getCurrentUser - Error:', error);
             return ResponseResult.error(error.message || '获取用户信息失败', 500);
+        }
+    }
+
+    /**
+     * 更新用户信息
+     * @param updateData 要更新的用户信息
+     * @returns 更新后的用户信息
+     */
+    @Put('/update', { middleware: [JwtMiddleware], description: '更新当前用户信息' })
+    @HttpCode(200)
+    public async updateUser(@Body() updateData: UpdateUserDTO) {
+        try {
+            // 从JWT payload中获取用户ID
+            const payload = this.ctx.user;
+            if (!payload || !payload.userId) {
+                return ResponseResult.error('未登录或会话已过期', 401);
+            }
+
+            // 调用服务层更新用户信息
+            const updatedUser = await this.userService.updateUser(payload.userId, updateData);
+
+            return ResponseResult.success(updatedUser, '用户信息更新成功');
+        } catch (error) {
+            // 根据错误类型返回相应状态码
+            let errorCode = 500;
+            if (error.message === '用户不存在') {
+                errorCode = 404;
+            } else if (error.message === '用户名已存在，无法修改') {
+                errorCode = 400;
+            }
+
+            return ResponseResult.error(
+                error.message || '更新用户信息失败',
+                errorCode
+            );
+        }
+    }
+
+    /**
+     * 更新指定用户信息（管理员功能）
+     * @param id 用户ID
+     * @param updateData 要更新的用户信息
+     * @returns 更新后的用户信息
+     */
+    @Put('/update/:id', { middleware: [JwtMiddleware], description: '更新指定用户信息（管理员功能）' })
+    @HttpCode(200)
+    public async updateUserById(@Param('id') id: number, @Body() updateData: UpdateUserDTO) {
+        try {
+            // 从JWT payload中获取当前用户信息
+            const payload = this.ctx.user;
+            if (!payload || !payload.userId) {
+                return ResponseResult.error('未登录或会话已过期', 401);
+            }
+
+            // 检查当前用户是否为管理员
+            const currentUser = await this.userService.getUserById(payload.userId);
+            if (!currentUser || currentUser.role !== 'manager') {
+                return ResponseResult.error('权限不足，需要管理员权限', 403);
+            }
+
+            // 调用服务层更新用户信息
+            const updatedUser = await this.userService.updateUser(Number(id), updateData);
+
+            return ResponseResult.success(updatedUser, '用户信息更新成功');
+        } catch (error) {
+            // 根据错误类型返回相应状态码
+            let errorCode = 500;
+            if (error.message === '用户不存在') {
+                errorCode = 404;
+            } else if (error.message === '用户名已存在，无法修改') {
+                errorCode = 400;
+            } else if (error.message === '权限不足，需要管理员权限') {
+                errorCode = 403;
+            }
+
+            return ResponseResult.error(
+                error.message || '更新用户信息失败',
+                errorCode
+            );
         }
     }
 

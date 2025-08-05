@@ -2,11 +2,12 @@ import { Provide } from '@midwayjs/core';
 import { InjectEntityModel } from '@midwayjs/typeorm'; // 使用正确的导入
 import type { Repository } from 'typeorm';
 import { User } from '../entity/index';
-import { CreateUserDTO, LoginDTO } from '../dto/index';
+import { CreateUserDTO, LoginDTO, UpdateUserDTO } from '../dto/index';
 import * as bcrypt from 'bcryptjs';
 import { join } from 'path';
 import { existsSync, unlinkSync } from 'fs';
 import { UserRole } from '../dto/index'
+
 @Provide()
 export class UserService {
     @InjectEntityModel(User) // 修改为正确的装饰器
@@ -80,6 +81,71 @@ export class UserService {
         return this.userModel.findOne({
             where: { userId }
         });
+    }
+    /**
+     * 修改用户信息
+     * @param userId 用户ID
+     * @param updateData 要更新的用户信息
+     * @returns 更新后的用户信息(不含密码)
+     */
+    async updateUser(userId: number, updateData: UpdateUserDTO): Promise<Omit<User, 'password'>> {
+        // 查找用户
+        const user = await this.userModel.findOne({
+            where: { userId }
+        });
+
+        if (!user) {
+            throw new Error('用户不存在');
+        }
+
+        // 如果要修改用户名，检查是否重名
+        if (updateData.username && updateData.username !== user.username) {
+            const existingUser = await this.userModel.findOne({
+                where: { username: updateData.username }
+            });
+
+            if (existingUser) {
+                throw new Error('用户名已存在，无法修改');
+            }
+        }
+
+        // 如果要修改密码，进行加密处理
+        if (updateData.password) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(updateData.password, salt);
+        }
+
+        // 更新用户信息（不包含role字段，保护身份不可修改）
+        const updateFields: Partial<User> = {};
+
+        if (updateData.username !== undefined) {
+            updateFields.username = updateData.username;
+        }
+        if (updateData.phone !== undefined) {
+            updateFields.phone = updateData.phone;
+        }
+        if (updateData.avatar !== undefined) {
+            updateFields.avatar = updateData.avatar;
+        }
+        if (updateData.password !== undefined) {
+            updateFields.password = updateData.password;
+        }
+
+        // 执行更新
+        await this.userModel.update({ userId }, updateFields);
+
+        // 获取更新后的用户信息
+        const updatedUser = await this.userModel.findOne({
+            where: { userId }
+        });
+
+        if (!updatedUser) {
+            throw new Error('更新用户信息失败');
+        }
+
+        // 移除密码字段后返回
+        const { password, ...userWithoutPassword } = updatedUser;
+        return userWithoutPassword;
     }
     /**
      * 根据ID删除用户及其头像文件

@@ -12,6 +12,14 @@ export class LoginDTO {
   password: string;
 }
 
+// 更新用户信息请求体
+export class UpdateUserDTO {
+  username?: string;
+  phone?: string;
+  avatar?: string;
+  password?: string;
+}
+
 export enum UserRole {
   CUSTOMER = 'customer', // 普通用户
   MANAGER = 'manager'    // 管理员
