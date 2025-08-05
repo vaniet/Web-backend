@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index, JoinColumn, CreateDateColumn, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 import { Series } from './series.entity';
+import { Comment } from './comment.entity';
 
 @Entity('player_show')
 export class PlayerShow {
@@ -48,4 +49,8 @@ export class PlayerShow {
     // 发布时间
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
+
+    // 评论关联
+    @OneToMany(() => Comment, comment => comment.playerShow)
+    comments: Comment[];
 } 

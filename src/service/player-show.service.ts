@@ -5,12 +5,19 @@ import { PlayerShow } from '../entity/player-show.entity';
 import { Purchase } from '../entity/purchase.entity';
 import { Series } from '../entity/series.entity';
 import { User } from '../entity/user.entity';
+import { Comment } from '../entity/comment.entity';
 import {
     CreatePlayerShowDTO,
     QueryPlayerShowDTO,
     PlayerShowListResponseDTO,
     PlayerShowDetailResponseDTO
 } from '../dto/player-show.dto';
+import {
+    CreateCommentDTO,
+    CommentListResponseDTO,
+    CommentDetailResponseDTO,
+    QueryCommentDTO
+} from '../dto/comment.dto';
 import { ShippingStatus } from '../entity/purchase.entity';
 
 @Provide()
@@ -26,6 +33,9 @@ export class PlayerShowService {
 
     @InjectEntityModel(User)
     userModel: Repository<User>;
+
+    @InjectEntityModel(Comment)
+    commentModel: Repository<Comment>;
 
     /**
      * 创建玩家秀
@@ -206,8 +216,6 @@ export class PlayerShowService {
         };
     }
 
-
-
     /**
      * 删除玩家秀
      * @param id 玩家秀ID
@@ -227,9 +235,172 @@ export class PlayerShowService {
         return true;
     }
 
+    /**
+     * 创建评论
+     * @param userId 用户ID
+     * @param playerShowId 玩家秀ID
+     * @param data 评论数据
+     * @returns 创建的评论
+     */
+    async createComment(userId: number, playerShowId: number, data: CreateCommentDTO): Promise<CommentDetailResponseDTO> {
+        // 验证玩家秀是否存在
+        const playerShow = await this.playerShowModel.findOne({
+            where: { id: playerShowId, isHidden: false }
+        });
 
+        if (!playerShow) {
+            throw new Error('玩家秀不存在或已被隐藏');
+        }
 
+        // 创建评论
+        const comment = this.commentModel.create({
+            userId,
+            playerShowId,
+            content: data.content
+        });
 
+        const savedComment = await this.commentModel.save(comment);
 
+        // 获取评论详情（包含用户信息）
+        const commentWithUser = await this.commentModel.findOne({
+            where: { id: savedComment.id },
+            relations: ['user', 'playerShow']
+        });
 
+        if (!commentWithUser) {
+            throw new Error('创建评论失败');
+        }
+
+        return {
+            id: commentWithUser.id,
+            content: commentWithUser.content,
+            isHidden: commentWithUser.isHidden,
+            createdAt: commentWithUser.createdAt,
+            user: commentWithUser.user ? {
+                userId: commentWithUser.user.userId,
+                username: commentWithUser.user.username,
+                avatar: commentWithUser.user.avatar
+            } : undefined,
+            playerShow: commentWithUser.playerShow ? {
+                id: commentWithUser.playerShow.id,
+                title: commentWithUser.playerShow.title
+            } : undefined
+        };
+    }
+
+    /**
+     * 获取玩家秀的评论列表
+     * @param playerShowId 玩家秀ID
+     * @param query 查询条件
+     * @returns 评论列表和总数
+     */
+    async getCommentsByPlayerShow(playerShowId: number, query: QueryCommentDTO): Promise<{ list: CommentListResponseDTO[], total: number }> {
+        // 验证玩家秀是否存在
+        const playerShow = await this.playerShowModel.findOne({
+            where: { id: playerShowId, isHidden: false }
+        });
+
+        if (!playerShow) {
+            throw new Error('玩家秀不存在或已被隐藏');
+        }
+
+        const queryBuilder = this.commentModel.createQueryBuilder('comment')
+            .leftJoinAndSelect('comment.user', 'user')
+            .where('comment.playerShowId = :playerShowId', { playerShowId })
+            .andWhere('comment.isHidden = :isHidden', { isHidden: false });
+
+        // 排序
+        const orderBy = query.orderBy || 'createdAt';
+        const orderDirection = query.orderDirection || 'ASC';
+        queryBuilder.orderBy(`comment.${orderBy}`, orderDirection);
+
+        // 分页
+        const page = query.page || 1;
+        const limit = query.limit || 20;
+        const offset = (page - 1) * limit;
+
+        queryBuilder.skip(offset).take(limit);
+
+        const [list, total] = await queryBuilder.getManyAndCount();
+
+        // 转换为响应DTO
+        const responseList: CommentListResponseDTO[] = list.map(item => ({
+            id: item.id,
+            content: item.content,
+            createdAt: item.createdAt,
+            user: item.user ? {
+                userId: item.user.userId,
+                username: item.user.username,
+                avatar: item.user.avatar
+            } : undefined
+        }));
+
+        return { list: responseList, total };
+    }
+
+    /**
+     * 删除评论
+     * @param commentId 评论ID
+     * @param userId 用户ID
+     * @returns 是否删除成功
+     */
+    async deleteComment(commentId: number, userId: number): Promise<boolean> {
+        const comment = await this.commentModel.findOne({
+            where: { id: commentId, userId }
+        });
+
+        if (!comment) {
+            throw new Error('评论不存在或无权限删除');
+        }
+
+        await this.commentModel.remove(comment);
+        return true;
+    }
+
+    /**
+     * 获取我的评论列表
+     * @param userId 用户ID
+     * @param query 查询条件
+     * @returns 评论列表和总数
+     */
+    async getMyComments(userId: number, query: QueryCommentDTO): Promise<{ list: CommentDetailResponseDTO[], total: number }> {
+        const queryBuilder = this.commentModel.createQueryBuilder('comment')
+            .leftJoinAndSelect('comment.user', 'user')
+            .leftJoinAndSelect('comment.playerShow', 'playerShow')
+            .where('comment.userId = :userId', { userId })
+            .andWhere('comment.isHidden = :isHidden', { isHidden: false });
+
+        // 排序
+        const orderBy = query.orderBy || 'createdAt';
+        const orderDirection = query.orderDirection || 'DESC';
+        queryBuilder.orderBy(`comment.${orderBy}`, orderDirection);
+
+        // 分页
+        const page = query.page || 1;
+        const limit = query.limit || 10;
+        const offset = (page - 1) * limit;
+
+        queryBuilder.skip(offset).take(limit);
+
+        const [list, total] = await queryBuilder.getManyAndCount();
+
+        // 转换为响应DTO
+        const responseList: CommentDetailResponseDTO[] = list.map(item => ({
+            id: item.id,
+            content: item.content,
+            isHidden: item.isHidden,
+            createdAt: item.createdAt,
+            user: item.user ? {
+                userId: item.user.userId,
+                username: item.user.username,
+                avatar: item.user.avatar
+            } : undefined,
+            playerShow: item.playerShow ? {
+                id: item.playerShow.id,
+                title: item.playerShow.title
+            } : undefined
+        }));
+
+        return { list: responseList, total };
+    }
 } 

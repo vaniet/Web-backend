@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { UserRole } from '../dto/index'
 import { Purchase } from './purchase.entity';
 import { PlayerShow } from './player-show.entity';
+import { Comment } from './comment.entity';
 
 @Entity('user') // 对应数据库表名
 export class User {
@@ -76,4 +77,8 @@ export class User {
     // 玩家秀关联
     @OneToMany(() => PlayerShow, playerShow => playerShow.user)
     playerShows: PlayerShow[];
+
+    // 评论关联
+    @OneToMany(() => Comment, comment => comment.user)
+    comments: Comment[];
 }
