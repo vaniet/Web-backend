@@ -16,7 +16,7 @@ export default {
         type: 'sqlite',
         database: 'webdevapi.db',
         synchronize: true,
-        logging: false, // 关闭SQL日志，减少冗余
+        logging: true, // 关闭SQL日志，减少冗余
         entities: [
           ...Object.values(entity)
         ],
@@ -52,5 +52,17 @@ export default {
         ...filteredRest
       };
     }
+  },
+staticFile:{
+dirs:{
+  default:{
+    prefix: '/',
+    dir: 'public',
+  },
+  another:{
+    prefix: '/assets',
+    dir: 'public/assets',
   }
+}
+}
 } as MidwayConfig;

@@ -12,6 +12,8 @@ import { ReportMiddleware } from './middleware/report.middleware';
 import * as upload from '@midwayjs/upload';
 import * as cors from '@koa/cors';
 import * as koaStatic from 'koa-static';
+import * as DefaultConfig from './config/config.default';
+import * as UnittestConfig from './config/config.unittest';
 
 
 @Configuration({
@@ -27,7 +29,12 @@ import * as koaStatic from 'koa-static';
       enabledEnvironment: ['local'],
     },
   ],
-  importConfigs: [join(__dirname, './config')],
+  importConfigs: [
+    {
+      default: DefaultConfig,  
+      unittest: UnittestConfig,     
+    }
+  ],
 })
 export class MainConfiguration {
   @App('koa')
