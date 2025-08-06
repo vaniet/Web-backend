@@ -16,7 +16,7 @@ export default {
         type: 'sqlite',
         database: 'webdevapi.db',
         synchronize: true,
-        logging: true, // 关闭SQL日志，减少冗余
+        logging: false, // 关闭SQL日志，减少冗余
         entities: [
           ...Object.values(entity)
         ],
