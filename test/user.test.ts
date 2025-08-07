@@ -36,22 +36,22 @@ describe('User API Tests', () => {
       }
     });
 
-// 新增删除用户测试（依赖上面注册的用户ID）
-it('should delete the registered user', async () => {
-  // 确保userId已获取（避免测试顺序问题）
-  expect(userId).toBeDefined();
+    // 新增删除用户测试（依赖上面注册的用户ID）
+    it('should delete the registered user', async () => {
+      // 确保userId已获取（避免测试顺序问题）
+      expect(userId).toBeDefined();
 
-  // 发送删除请求
-  const response = await testContext.request
-    .delete(`/users/delete/${userId}`); // 使用注册成功的用户ID
+      // 发送删除请求
+      const response = await testContext.request
+        .delete(`/users/delete/${userId}`); // 使用注册成功的用户ID
 
-  console.log('Delete user response:', response.body);
-  console.log('Delete user status:', response.status);
+      console.log('Delete user response:', response.body);
+      console.log('Delete user status:', response.status);
 
-  // 断言删除成功
-  expect(response.body).toBeDefined();
-  expect(response.body.success).toBe(true); // 匹配控制器返回的{ success: result }
-});
+      // 断言删除成功
+      expect(response.body).toBeDefined();
+      expect(response.body.success).toBe(true); // 匹配控制器返回的{ success: result }
+    });
 
 
   });
