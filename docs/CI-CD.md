@@ -28,10 +28,9 @@
 1. 检出代码
 2. 设置Node.js环境
 3. 安装依赖 (`npm ci`)
-4. 运行代码检查 (`npm run lint`)
-5. 运行单元测试 (`npm run test`)
-6. 生成测试覆盖率报告 (`npm run cov`)
-7. 上传覆盖率到Codecov
+4. 运行单元测试 (`npm run test`)
+5. 生成测试覆盖率报告 (`npm run cov`)
+6. 上传覆盖率到Codecov
 
 ### Git Hooks (本地)
 
@@ -57,9 +56,6 @@ npm run test
 
 # 运行测试并生成覆盖率报告
 npm run cov
-
-# 运行代码检查
-npm run lint
 ```
 
 ### 3. 查看测试结果
@@ -82,8 +78,7 @@ npm run lint
 ```json
 {
   "test": "cross-env NODE_ENV=unittest jest",
-  "cov": "jest --coverage",
-  "lint": "mwts check"
+  "cov": "jest --coverage"
 }
 ```
 
