@@ -90,3 +90,37 @@ src/
 - 删除系列时会自动删除相关价格记录
 - 折扣系数范围：0-1，1.00表示无折扣
 - 所有价格API都需要JWT认证
+
+## CI/CD 自动测试
+
+项目已配置Git推送后自动触发测试的CI/CD流程：
+
+### 功能特性
+- **GitHub Actions**: 云端自动测试，支持多Node.js版本
+- **Git Hooks**: 本地推送前测试，防止错误代码推送
+- **测试覆盖**: 自动生成代码覆盖率报告
+- **代码检查**: 自动运行ESLint代码检查
+
+### 快速设置
+```bash
+# Windows
+scripts\setup-ci.bat
+
+# Linux/Mac
+chmod +x scripts/setup-ci.sh
+./scripts/setup-ci.sh
+```
+
+### 使用方法
+```bash
+# 推送代码（自动触发测试）
+git push origin main
+
+# 本地测试
+npm run test
+
+# 查看覆盖率
+npm run cov
+```
+
+详细配置说明请查看 [CI/CD文档](docs/CI-CD.md)
