@@ -26,6 +26,10 @@ export class Series {
     @Column({ type: 'text', nullable: true })
     detail: string;
 
+    // 新增：系列上架状态，默认上架
+    @Column({ default: true })
+    isListed: boolean;
+
     @OneToMany(() => Style, style => style.series)
     styles: Style[];
 

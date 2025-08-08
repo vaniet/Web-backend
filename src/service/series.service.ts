@@ -34,6 +34,7 @@ export class SeriesService {
       cover: data.cover,
       description: data.description,
       detail: data.detail,
+      isListed: true,
     });
     const savedSeries = await this.seriesModel.save(newSeries);
 
@@ -50,16 +51,16 @@ export class SeriesService {
     });
     await this.styleModel.save(styles);
 
-        // 创建消息记录，合并系列名、简介、细节和款式名称
+    // 创建消息记录，合并系列名、简介、细节和款式名称
     const styleNames = data.styles.map(style => style.name).join('');
     const baseContent = [
       data.name,
       data.description || '',
       data.detail || ''
     ].filter(Boolean).join('\n\n');
-    
-    const messageContent = styleNames ? 
-      `${baseContent}${styleNames}` : 
+
+    const messageContent = styleNames ?
+      `${baseContent}${styleNames}` :
       baseContent;
 
     const newMessage = this.messageModel.create({
