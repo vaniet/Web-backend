@@ -69,7 +69,7 @@ export class StockService {
     let boxContents = normalStyles.map(style => style.id);
 
     // 每盒独立判断：5%概率包含隐藏款
-    if (Math.random() < 0.5 && hiddenStyles.length > 0) {
+    if (Math.random() < 0.05 && hiddenStyles.length > 0) {
       const randomHiddenStyle = hiddenStyles[Math.floor(Math.random() * hiddenStyles.length)];
       const randomNormalStyle = normalStyles[Math.floor(Math.random() * normalStyles.length)];
 

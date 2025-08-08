@@ -314,15 +314,16 @@ export class PurchaseService {
     /**
      * 检查收货信息是否填写完整
      */
-    async checkShippingInfoComplete(id: number, userId: number): Promise<{ isComplete: boolean }> {
+    async checkShippingInfoComplete(id: number, userId?: number): Promise<{ isComplete: boolean }> {
         // 查找订单
+        const whereCondition = userId ? { id, userId } : { id };
         const purchase = await this.purchaseModel.findOne({
-            where: { id, userId },
+            where: whereCondition,
             select: ['receiverName', 'receiverPhone', 'shippingAddress']
         });
 
         if (!purchase) {
-            throw new Error('购买记录不存在或无权限操作');
+            throw new Error('购买记录不存在');
         }
 
         // 检查收货信息是否完整

@@ -185,13 +185,13 @@ export class PurchaseController {
     }
 
     /**
-     * 检查收货信息是否填写完整
+     * 检查收货信息是否填写完整（允许任何用户访问）
      */
     @Get('/shipping-info/check/:id', { middleware: [JwtMiddleware] })
     async checkShippingInfoComplete(@Param('id') id: number) {
         try {
-            const userId = this.ctx.user.userId;
-            const result = await this.purchaseService.checkShippingInfoComplete(Number(id), userId);
+            // 移除用户身份检查，允许任何用户访问此接口
+            const result = await this.purchaseService.checkShippingInfoComplete(Number(id), null);
             return ResponseResult.success(result, '操作成功');
         } catch (error) {
             return ResponseResult.error(error.message);
